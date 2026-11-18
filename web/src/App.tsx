@@ -17,6 +17,7 @@ import BoardPage from './pages/Board'
 import SettingsPage from './pages/Settings'
 import { useAutoBackup } from './lib/autoBackup'
 import { useCategorySync } from './lib/categories'
+import { UpdateBanner } from './ui/UpdateBanner'
 
 const TITLES: Record<string, string> = {
   '/': 'nav.today',
@@ -262,6 +263,7 @@ function Shell() {
       </div>
 
       <GlobalSearch />
+      <UpdateBanner />
     </div>
   )
 }

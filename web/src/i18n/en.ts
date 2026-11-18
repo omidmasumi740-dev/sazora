@@ -539,7 +539,7 @@ export const en: Translations = {
     fontFamily: 'Font family',
     fontSize: 'Font size',
     autoUpdate: 'Auto-update',
-    autoUpdateHint: 'In web: check for new versions when online',
+    autoUpdateHint: 'On launch, new versions are checked automatically and installed with one click',
     updateCheck: 'Check for updates',
     updateAvailable: 'New version available!',
     updateNone: 'You have the latest version',

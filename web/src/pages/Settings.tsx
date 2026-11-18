@@ -895,6 +895,18 @@ export default function SettingsPage() {
               نسخهٔ نصب‌شده: <b className="text-ink" dir="ltr">{APP_VERSION}</b> — بررسی آنلاین از
               GitHub Releases یا نصب دستی از فایل ZIP. داده‌های شما دست‌نخورده می‌ماند.
             </p>
+            <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="accent-current"
+                checked={s.autoUpdate}
+                onChange={(e) => s.setAutoUpdate(e.target.checked)}
+              />
+              <span className="text-[12.5px]">
+                {t('settings.autoUpdate')}
+                <span className="block text-[11px] text-faint">{t('settings.autoUpdateHint')}</span>
+              </span>
+            </label>
             <div className="flex flex-wrap gap-2">
               <button
                 className="btn btn-primary"
@@ -1044,7 +1056,7 @@ export default function SettingsPage() {
         <div className="mt-4 flex flex-wrap gap-2">
           <a
             className="btn btn-primary"
-            href="https://omidmasomi1.github.io/"
+            href="https://omidmasumi740-dev.github.io/donate-page/"
             target="_blank"
             rel="noreferrer"
           >

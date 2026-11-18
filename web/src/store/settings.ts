@@ -85,7 +85,7 @@ export const useSettings = create<Settings>()(
       hiddenMenus: [],
       fontFamily: 'vazirmatn',
       fontSize: 'md',
-      autoUpdate: false,
+      autoUpdate: true,
       backupDir: '',
       updateDir: '',
 
@@ -127,11 +127,13 @@ export const useSettings = create<Settings>()(
     }),
     {
       name: 'sazora-settings',
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
         const state = persisted as Partial<Settings>
         // نسخهٔ قدیمی تم طلاییِ پیش‌فرض را داشت؛ یک‌بار به هویت نارنجی SAZORA منتقل شود
         if (version < 2 && (!state.accent || state.accent === 'gold')) state.accent = 'orange'
+        // گزینهٔ به‌روزرسانی خودکار تازه اضافه شده؛ برای نصب‌های قبلی روشن شود
+        if (version < 3 && state.autoUpdate === false) state.autoUpdate = true
         return state as Settings
       },
     },
