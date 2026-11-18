@@ -36,6 +36,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "app\*"; DestDir: "{app}\app"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "SAZORA.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "app.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "README-DESKTOP.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "SAZORA-ROADMAP-v1.9.13.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Microsoft.Web.WebView2.Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Microsoft.Web.WebView2.WinForms.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WebView2Loader.dll"; DestDir: "{app}"; Flags: ignoreversion
