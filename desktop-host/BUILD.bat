@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM  SAZORA Desktop v1.9.12 - Builder + Installer (Inno Setup 7)
+REM  SAZORA Desktop v1.9.13 - Builder + Installer (Inno Setup 7)
 REM  Rebuilds SAZORA.exe and the setup file.
 REM  Requires: .NET Framework 4.8 compiler + Inno Setup 7
 REM ============================================================
@@ -34,5 +34,5 @@ echo   [2/2] Compiling installer...
 "%ISCC%" "installer.iss"
 
 echo.
-echo   DONE: installer\SAZORA_1.9.12_Setup.exe
+echo   DONE: installer\SAZORA_1.9.13_Setup.exe
 pause

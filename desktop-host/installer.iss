@@ -1,6 +1,6 @@
-; SAZORA Desktop v1.9.12 - Installer (Inno Setup 7)
+; SAZORA Desktop v1.9.13 - Installer (Inno Setup 7)
 #define MyAppName "SAZORA"
-#define MyAppVersion "1.9.12"
+#define MyAppVersion "1.9.13"
 #define MyAppExeName "SAZORA.exe"
 
 [Setup]
@@ -12,7 +12,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=installer
-OutputBaseFilename=SAZORA_1.9.12_Setup
+OutputBaseFilename=SAZORA_1.9.13_Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

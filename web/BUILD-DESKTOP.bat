@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM  SAZORA Desktop v1.9.12 — Build web app + Windows installer
+REM  SAZORA Desktop v1.9.13 — Build web app + Windows installer
 REM  Requires: Node.js, .NET Framework 4.8 compiler, Inno Setup 7,
 REM            and WebView2 SDK DLLs inside "..\desktop-host"
 REM ============================================================
@@ -9,7 +9,7 @@ cd /d "%~dp0"
 
 echo.
 echo   ========================================
-echo   SAZORA Desktop v1.9.12 — Builder
+echo   SAZORA Desktop v1.9.13 — Builder
 echo   ========================================
 echo.
 

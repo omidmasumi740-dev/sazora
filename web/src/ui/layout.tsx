@@ -139,7 +139,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           )}
         </div>
         <span className="ms-auto text-[10px] text-faint bg-surface-2 border border-line rounded px-1.5">
-          v1.9.12
+          v1.9.13
         </span>
       </div>
 
