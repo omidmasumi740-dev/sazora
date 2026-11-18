@@ -1,0 +1,534 @@
+@import 'tailwindcss';
+
+/* فونت‌های محلی — بدون نیاز به اینترنت (آفلاین + اپ موبایل) */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('../assets/fonts/Vazirmatn-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('../assets/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('../assets/fonts/Vazirmatn-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('../assets/fonts/Vazirmatn-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('../assets/fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
+   دیزاین‌سیستم SAZORA v3 — هویت نارنجی حرفه‌ای (SAZORA Theme)
+   پالت: نارنجی #FF8C00 / سرمه‌ای #374151 / زرد #FFC107
+   ============================================================ */
+
+:root {
+  /* پایه رنگ‌ها — حالت روشن (کرم گرم) */
+  --b-bg: #FAF8F4;
+  --b-surface: #FFFFFF;
+  --b-surface-2: #F6EDE2;
+  --b-surface-3: #EFE1D1;
+  --b-text: #20262E;
+  --b-muted: #4E5865;
+  --b-faint: #8C95A1;
+  --b-border: #E7DCCB;
+
+  /* رنگ تاکیدی — نارنجی SAZORA */
+  --b-accent: #E07B39;
+  --b-accent-hover: #C9662A;
+  --b-accent-soft: #FBEFE4;
+  --b-accent-contrast: #FFFFFF;
+  --b-secondary: #374151;
+  --b-yellow: #F2B33D;
+
+  /* رنگ‌های وضعیت */
+  --b-red: #D64545;
+  --b-orange: #E07B39;
+  --b-blue: #3B6FA8;
+  --b-green: #2E9E6B;
+  --b-amber: #F2B33D;
+  --b-gray: #6B7280;
+
+  /* سایه‌ها — دقیق و ظریف */
+  --b-shadow-sm: 0 1px 3px rgba(55, 65, 81, 0.05), 0 1px 2px rgba(55, 65, 81, 0.04);
+  --b-shadow-lg: 0 12px 40px rgba(55, 65, 81, 0.1);
+  --b-shadow-float: 0 24px 60px rgba(55, 65, 81, 0.14);
+
+  /* گردی گوشه‌ها */
+  --b-radius-sm: 8px;
+  --b-radius: 14px;
+  --b-radius-lg: 20px;
+  --b-radius-xl: 28px;
+
+  /* فاصله‌گذاری */
+  --b-space-xs: 4px;
+  --b-space-sm: 8px;
+  --b-space-md: 16px;
+  --b-space-lg: 24px;
+  --b-space-xl: 32px;
+  --b-space-2xl: 48px;
+
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --b-bg: #121419;
+  --b-surface: #191D24;
+  --b-surface-2: #21262F;
+  --b-surface-3: #2B313B;
+  --b-text: #F3F4F6;
+  --b-muted: #B6BDC8;
+  --b-faint: #7C8592;
+  --b-border: #2E3540;
+
+  --b-accent: #E07B39;
+  --b-accent-hover: #FFA21F;
+  --b-accent-soft: rgba(224, 123, 57, 0.16);
+  --b-accent-contrast: #FFFFFF;
+  --b-secondary: #374151;
+  --b-yellow: #F2B33D;
+
+  --b-red: #E06C6C;
+  --b-orange: #E07B39;
+  --b-blue: #6B9BD4;
+  --b-green: #6BAE8F;
+  --b-amber: #F2B33D;
+  --b-gray: #7C8592;
+
+  --b-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --b-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --b-shadow-float: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--b-bg);
+  --color-surface: var(--b-surface);
+  --color-surface-2: var(--b-surface-2);
+  --color-surface-3: var(--b-surface-3);
+  --color-ink: var(--b-text);
+  --color-muted: var(--b-muted);
+  --color-faint: var(--b-faint);
+  --color-line: var(--b-border);
+  --color-accent: var(--b-accent);
+  --color-accent-hover: var(--b-accent-hover);
+  --color-accent-soft: var(--b-accent-soft);
+  --color-accent-contrast: var(--b-accent-contrast);
+  --color-danger: var(--b-red);
+  --color-warn: var(--b-orange);
+  --color-info: var(--b-blue);
+  --color-success: var(--b-green);
+  --color-amber: var(--b-amber);
+  --color-gray: var(--b-gray);
+
+  --font-sans: 'Vazirmatn', 'Inter', system-ui, sans-serif;
+  --font-mono: 'Inter', ui-monospace, monospace;
+
+  --shadow-card: var(--b-shadow-sm);
+  --shadow-float: var(--b-shadow-lg);
+  --shadow-fab: var(--b-shadow-float);
+  --radius-card: var(--b-radius);
+  --radius-lg: var(--b-radius-lg);
+  --radius-xl: var(--b-radius-xl);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--b-bg);
+  background-image: radial-gradient(1100px 520px at 88% -8%, rgba(224, 123, 57, 0.045), transparent 62%);
+  background-attachment: fixed;
+  color: var(--b-text);
+  font-family: 'Vazirmatn', 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+[data-theme='dark'] body {
+  background-image: radial-gradient(1100px 560px at 88% -8%, rgba(224, 123, 57, 0.085), transparent 62%);
+}
+
+::selection {
+  background: var(--b-accent);
+  color: var(--b-accent-contrast);
+}
+
+/* ---------- اسکرول‌بار سفارشی ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--b-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--b-border);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--b-faint);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- کلاس‌های مشترک ---------- */
+@layer components {
+  .card {
+    background: var(--b-surface);
+    border: 1px solid var(--b-border);
+    border-radius: var(--b-radius);
+    box-shadow: var(--b-shadow-sm);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+  .card:hover {
+    box-shadow: var(--b-shadow-lg);
+    border-color: color-mix(in srgb, var(--b-accent) 20%, var(--b-border));
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--b-border);
+    background: var(--b-surface);
+    color: var(--b-text);
+    border-radius: var(--b-radius-sm);
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover {
+    background: var(--b-surface-2);
+    border-color: var(--b-faint);
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn-primary {
+    background: var(--b-accent);
+    border-color: var(--b-accent);
+    color: var(--b-accent-contrast);
+    font-weight: 600;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--b-accent) 20%, transparent);
+  }
+  .btn-primary:hover {
+    background: var(--b-accent-hover);
+    border-color: var(--b-accent-hover);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--b-accent) 30%, transparent);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--b-muted);
+  }
+  .btn-ghost:hover {
+    background: var(--b-surface-2);
+    color: var(--b-text);
+  }
+  .btn-danger {
+    color: var(--b-red);
+    border-color: color-mix(in srgb, var(--b-red) 20%, transparent);
+  }
+  .btn-danger:hover {
+    background: color-mix(in srgb, var(--b-red) 8%, transparent);
+    border-color: var(--b-red);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    line-height: 18px;
+    border-radius: 20px;
+    padding: 2px 10px;
+    border: 1px solid var(--b-border);
+    background: var(--b-surface);
+    color: var(--b-muted);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .chip-accent {
+    color: var(--b-accent);
+    background: var(--b-accent-soft);
+    border-color: color-mix(in srgb, var(--b-accent) 20%, transparent);
+  }
+  .chip-danger {
+    color: var(--b-red);
+    background: color-mix(in srgb, var(--b-red) 7%, transparent);
+    border-color: color-mix(in srgb, var(--b-red) 25%, transparent);
+    font-weight: 600;
+  }
+  .chip-warn {
+    color: var(--b-orange);
+    background: color-mix(in srgb, var(--b-orange) 7%, transparent);
+    border-color: color-mix(in srgb, var(--b-orange) 25%, transparent);
+    font-weight: 600;
+  }
+  .chip-info {
+    color: var(--b-blue);
+    background: color-mix(in srgb, var(--b-blue) 7%, transparent);
+    border-color: color-mix(in srgb, var(--b-blue) 25%, transparent);
+    font-weight: 600;
+  }
+  .chip-success {
+    color: var(--b-green);
+    background: color-mix(in srgb, var(--b-green) 7%, transparent);
+    border-color: color-mix(in srgb, var(--b-green) 25%, transparent);
+    font-weight: 600;
+  }
+
+  .bar {
+    height: 6px;
+    border-radius: 20px;
+    background: var(--b-surface-3);
+    overflow: hidden;
+  }
+  .bar > i {
+    display: block;
+    height: 100%;
+    background: var(--b-accent);
+    border-radius: 20px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .field {
+    width: 100%;
+    background: var(--b-surface);
+    border: 1px solid var(--b-border);
+    border-radius: var(--b-radius-sm);
+    padding: 10px 14px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--b-text);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .field::placeholder {
+    color: var(--b-faint);
+  }
+  .field:focus {
+    border-color: var(--b-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--b-accent) 12%, transparent);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--b-radius-sm);
+    border: 0;
+    background: transparent;
+    color: var(--b-text);
+    font-size: 13.5px;
+    font-weight: 500;
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .nav-item:hover {
+    background: var(--b-surface-2);
+    color: var(--b-text);
+  }
+  .nav-item.active {
+    background: var(--b-accent-soft);
+    color: var(--b-accent);
+    font-weight: 700;
+    box-shadow: inset 4px 0 0 var(--b-accent);
+    border-radius: 0 var(--b-radius-sm) var(--b-radius-sm) 0;
+  }
+  [dir='rtl'] .nav-item.active {
+    box-shadow: inset -4px 0 0 var(--b-accent);
+    border-radius: var(--b-radius-sm) 0 0 var(--b-radius-sm);
+  }
+
+  /* منوی اصلی — ته‌رنگ ملایم و آیکون‌های رنگی */
+  .app-sidebar {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--b-accent) 4%, var(--b-surface)) 0%, var(--b-surface) 45%);
+  }
+  [data-theme='dark'] .app-sidebar {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--b-accent) 7%, var(--b-surface)) 0%, var(--b-surface) 50%);
+  }
+  .app-sidebar .nav-item > svg {
+    color: color-mix(in srgb, var(--b-accent) 62%, var(--b-muted));
+    transition: color 0.15s ease;
+  }
+  .app-sidebar .nav-item.active > svg {
+    color: var(--b-accent);
+  }
+}
+
+/* ---------- انیمیشن‌ها ---------- */
+@keyframes b-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.b-view {
+  animation: b-fade 0.25s ease;
+}
+
+@keyframes b-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.b-pop {
+  animation: b-pop 0.2s ease;
+}
+
+@keyframes b-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.b-slide-up {
+  animation: b-slide-up 0.3s ease;
+}
+
+@keyframes b-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   موبایل — حاشیه امن (نوتچ/گوشه‌ها) و کیبورد
+   ============================================================ */
+html,
+body,
+#root {
+  height: 100%;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.keyboard-open {
+  padding-bottom: 45vh;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* ============================================================
+   حالت تمرکز — پس‌زمینه آرامش‌بخش با حرکت بسیار کند (Ken Burns)
+   ============================================================ */
+.sazora-focus-bg {
+  position: absolute;
+  inset: -8%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: sazora-focus-pan 60s ease-in-out infinite alternate;
+  will-change: transform;
+  filter: saturate(0.95) brightness(0.92);
+}
+
+@keyframes sazora-focus-pan {
+  0% {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.12) translate3d(-1.6%, -1.2%, 0);
+  }
+  100% {
+    transform: scale(1.06) translate3d(1.6%, 1.2%, 0);
+  }
+}
+

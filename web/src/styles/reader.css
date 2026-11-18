@@ -1,0 +1,88 @@
+/* ============================================================
+   SAZORA — Book reader styles
+   PDF canvas · Word (docx-preview) · PowerPoint (pptx-preview)
+   ============================================================ */
+
+/* ---------- ناحیه رندر Word ---------- */
+.sazora-docx-host {
+  width: 100%;
+  overflow-x: auto;
+  direction: ltr;
+}
+
+/* docx-preview با className="sazora-docx" می‌سازد:
+   wrapper = .sazora-docx-wrapper  |  سند = .sazora-docx */
+.sazora-docx-host .sazora-docx-wrapper {
+  background: transparent !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.sazora-docx-host section.sazora-docx {
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+  border-radius: 6px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  direction: rtl;
+  max-width: 100%;
+}
+
+.sazora-docx-host .sazora-docx-wrapper > .sazora-docx + .sazora-docx {
+  margin-top: 14px;
+}
+
+/* تصاویر داخل فایل Word */
+.sazora-docx-host .sazora-docx img {
+  max-width: 100%;
+  height: auto;
+}
+
+.sazora-docx-host .sazora-docx table {
+  max-width: 100%;
+}
+
+/* ---------- ناحیه رندر PowerPoint ---------- */
+.sazora-pptx-host {
+  width: 100%;
+  direction: ltr;
+  display: flex;
+  justify-content: center;
+}
+
+.sazora-pptx-host .pptx-preview-wrapper {
+  width: 100% !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: transparent !important;
+}
+
+/* اسلایدها */
+.sazora-pptx-host .pptx-preview-slide-wrapper {
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.sazora-pptx-host img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* دکمه‌های داخلی pptx-preview را پنهان می‌کنیم (پاصفحه خودمان را داریم) */
+.sazora-pptx-host .pptx-preview-wrapper-next,
+.sazora-pptx-host .pptx-preview-wrapper-pagination {
+  display: none !important;
+}
+
+/* ---------- فونت داخل رندرها ---------- */
+.sazora-docx-host,
+.sazora-pptx-host {
+  font-family: Vazirmatn, Tahoma, system-ui, sans-serif;
+}

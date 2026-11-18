@@ -1,0 +1,21 @@
+# Dependencies and build output
+web/node_modules/
+web/dist/
+desktop-host/app/
+desktop-host/installer/
+desktop-host/SAZORA.exe
+desktop-host/*.dll
+
+# Release artifacts
+release/
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local secrets
+.env
+.env.*

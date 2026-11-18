@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#FF8C00" />
+    <meta name="description" content="SAZORA — Build with clarity. Manage with confidence. دستیار مدیریت کار، پروژه‌های ساختمانی، مالی و اهداف" />
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <title>SAZORA</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // فقط اگر بعد از ۵ ثانیه اپ بالا نیامد، پیام کمکی بده (بدون ریلود خودکار)
+      setTimeout(function () {
+        if (window.__sazoraBooted) return
+        var root = document.getElementById('root')
+        if (root && root.children.length > 0) return
+        var d = document.createElement('div')
+        d.dir = 'rtl'
+        d.style.cssText = 'padding:24px;max-width:560px;margin:40px auto;text-align:center;font-family:inherit'
+        d.innerHTML =
+          '<div style="font-size:40px">⚠️</div><b>برنامه باز نشد</b>' +
+          '<p style="color:#71717a;font-size:13px;line-height:2">اگر این پیام را می‌بینید، لطفاً با <b>Ctrl+Shift+R</b> صفحه را تازه کنید.</p>'
+        document.body.appendChild(d)
+      }, 5000)
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
