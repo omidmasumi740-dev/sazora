@@ -1,4 +1,4 @@
-﻿SAZORA Web App v1.9.13
+﻿SAZORA Web App v1.9.14
 =====================
 
 HOW TO RUN (from source):

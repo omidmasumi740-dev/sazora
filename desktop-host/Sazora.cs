@@ -44,6 +44,9 @@ namespace SAZORA
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            // GitHub به TLS 1.2 نیاز دارد؛ پیش‌فرض قدیمی .NET فقط SSL3/TLS1 است و بررسی به‌روزرسانی شکست می‌خورد
+            try { ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; } catch { }
+
             appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string wwwRoot = Path.Combine(appDir, "app");
 

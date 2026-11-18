@@ -10,9 +10,9 @@ SAZORA is an offline-first desktop assistant for tasks, construction projects, f
 
 | فایل | کاربرد |
 |---|---|
-| `SAZORA_1.9.13_Setup.exe` | نصب معمول ویندوز |
-| `SAZORA-Desktop-v1.9.13.zip` | نسخهٔ کامل برای اجرای Portable / نصب دستی |
-| `SAZORA-Update-v1.9.13.zip` | فایل به‌روزرسانی داخل اپ (محتوای ZIP در ریشه است) |
+| `SAZORA_1.9.14_Setup.exe` | نصب معمول ویندوز |
+| `SAZORA-Desktop-v1.9.14.zip` | نسخهٔ کامل برای اجرای Portable / نصب دستی |
+| `SAZORA-Update-v1.9.14.zip` | فایل به‌روزرسانی داخل اپ (محتوای ZIP در ریشه است) |
 | `SHA256SUMS.txt` | هش SHA-256 همهٔ فایل‌های انتشار |
 
 نیازمندی‌ها: Windows 10/11 (x64) و Microsoft Edge WebView2 Runtime.
@@ -102,7 +102,7 @@ desktop-host/        میزبان C# WinForms + WebView2 + HttpListener
   installer.iss      اسکریپت Inno Setup 7
   BUILD.bat          بیلد کامل ویندوز
 README.md
-SAZORA-ROADMAP-v1.9.13.md
+SAZORA-ROADMAP-v1.9.14.md
 ```
 
 ## مجوز
