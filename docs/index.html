@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d10">
+  <title>SAZORA — دستیار آفلاین کار، پروژه، مالی و اهداف</title>
+  <meta name="description" content="SAZORA یک دستیار آفلاین برای مدیریت کارهای روزانه، پروژه‌های ساختمانی، کارگران، مالی، اهداف و کتاب‌خوانی است. داده‌ها روی دستگاه خودتان می‌ماند.">
+  <link rel="canonical" href="https://omidmasumi740-dev.github.io/sazora/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SAZORA">
+  <meta property="og:title" content="SAZORA — دستیار آفلاین کار، پروژه، مالی و اهداف">
+  <meta property="og:description" content="کار، پروژهٔ ساختمانی، کارگر، مالی، هدف و کتاب — همه در یک اپ آفلاین ویندوز. داده‌ها روی دستگاه خودتان می‌ماند.">
+  <meta property="og:url" content="https://omidmasumi740-dev.github.io/sazora/">
+  <meta property="og:image" content="https://omidmasumi740-dev.github.io/sazora/assets/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="fa_IR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SAZORA — دستیار آفلاین کار، پروژه، مالی و اهداف">
+  <meta name="twitter:description" content="کار، پروژهٔ ساختمانی، کارگر، مالی، هدف و کتاب — همه در یک اپ آفلاین ویندوز.">
+  <meta name="twitter:image" content="https://omidmasumi740-dev.github.io/sazora/assets/img/og.png">
+  <link rel="icon" href="assets/img/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="assets/img/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="assets/fonts/vazirmatn-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/vazirmatn-bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var l = localStorage.getItem('sazora-lang');
+        if (l !== 'en') l = 'fa';
+        document.documentElement.lang = l;
+        document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+      } catch (e) {}
+    })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "SAZORA",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "softwareVersion": "1.9.17",
+    "inLanguage": ["fa", "en"],
+    "description": "Offline-first Windows assistant for daily tasks, construction projects, workers, finance, goals and reading.",
+    "url": "https://omidmasumi740-dev.github.io/sazora/",
+    "downloadUrl": "https://github.com/omidmasumi740-dev/sazora/releases/latest",
+    "image": "https://omidmasumi740-dev.github.io/sazora/assets/img/og.png",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Person", "name": "Omid Masomi" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="skip">پرش به محتوا</a>
+
+  <header class="site-header" id="siteHeader">
+    <div class="container nav">
+      <a class="brand" href="#top" aria-label="SAZORA">
+        <img src="assets/img/logo.svg" width="34" height="34" alt="">
+        <span class="brand-name">SAZORA</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#features" data-i18n="navFeatures">ویژگی‌ها</a>
+        <a href="#whats-new" data-i18n="navNew">تازه‌ها</a>
+        <a href="#screens" data-i18n="navScreens">تصاویر</a>
+        <a href="#download" data-i18n="navDownload">دانلود</a>
+        <a href="#faq" data-i18n="navFaq">سوالات</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="lang-toggle" id="langToggle" type="button" aria-label="Switch language">
+          <span class="lang-when-fa">EN</span>
+          <span class="lang-when-en">FA</span>
+        </button>
+        <a class="btn btn-ghost btn-sm nav-github" href="https://github.com/omidmasumi740-dev/sazora" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/omidmasumi740-dev/sazora/releases/download/v1.9.17/SAZORA_1.9.17_Setup.exe" data-download="sazora" data-dl-primary>
+          <span data-i18n="downloadShort">دانلود</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span><span data-i18n="heroBadgePrefix">نسخهٔ</span> <span data-version>1.9.17</span> <span data-i18n="heroBadgeSuffix">منتشر شد</span></span>
+          </div>
+          <h1 data-i18n-html="heroTitle">همهٔ کارهایت، در یک جای آرام و آفلاین.</h1>
+          <p class="lede" data-i18n="heroLede">کارهای روزانه، پروژه‌های ساختمانی، کارگران، مالی، اهداف و کتاب‌خوانی — یک دستیار ویندوز که بدون اینترنت هم کامل کار می‌کند و داده‌هایت را روی دستگاه خودت نگه می‌دارد.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg" href="https://github.com/omidmasumi740-dev/sazora/releases/download/v1.9.17/SAZORA_1.9.17_Setup.exe" data-download="sazora" data-dl-primary>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+              <span data-i18n="heroCta">دانلود نسخهٔ ویندوز</span>
+            </a>
+            <a class="btn btn-secondary btn-lg" href="#features" data-i18n="heroSecondary">دیدن قابلیت‌ها</a>
+          </div>
+          <p class="hero-note">
+            <span data-i18n="heroNote">نسخهٔ</span>
+            <span data-version>1.9.17</span>
+            <span aria-hidden="true">·</span>
+            <span data-size>6.9 MB</span>
+            <span aria-hidden="true">·</span>
+            <span>Windows 10/11 x64</span>
+          </p>
+          <ul class="hero-points">
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+              <span data-i18n="heroPoint1">بدون نیاز به اینترنت برای کار روزانه</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+              <span data-i18n="heroPoint2">داده‌ها روی دستگاه؛ بدون حساب آنلاین</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+              <span data-i18n="heroPoint3">پشتیبان خودکار و به‌روزرسانی داخل برنامه</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-glow" aria-hidden="true"></div>
+          <figure class="app-window">
+            <div class="window-bar" aria-hidden="true">
+              <span class="win-dots"><i></i><i></i><i></i></span>
+              <span class="window-title">SAZORA — <span data-i18n="windowReading">کتاب‌خوانی</span></span>
+            </div>
+            <img src="assets/img/reading-library.png" width="1600" height="1000" alt="SAZORA reading library screenshot" fetchpriority="high">
+          </figure>
+          <div class="float-card float-a">
+            <span class="mini-icon mini-orange">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 21h14"/></svg>
+            </span>
+            <span>
+              <b data-i18n="floatBackup">پشتیبان خودکار</b>
+              <small data-i18n="floatBackupSub">۵ نسخهٔ آخر، داخل برنامه</small>
+            </span>
+          </div>
+          <div class="float-card float-b">
+            <span class="mini-icon mini-green">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/></svg>
+            </span>
+            <span>
+              <b data-i18n="floatTimer">۲۴ دقیقه تمرکز</b>
+              <small data-i18n="floatTimerSub">تایمر مطالعه و پومودورو</small>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="container trust-row">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span data-i18n="trust1">آفلاین و خصوصی</span>
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h7"/></svg>
+          <span data-i18n="trust2">کاملاً فارسی و راست‌چین</span>
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 21h14"/></svg>
+          <span data-i18n="trust3">به‌روزرسانی یک‌کلیکی</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker" data-i18n="featuresKicker">یک اپ، تمام کارها</p>
+          <h2 data-i18n="featuresTitle">از کار روزانه تا پروژه و مالی</h2>
+          <p class="section-sub" data-i18n="featuresSub">بخش‌ها به هم وصل‌اند: کارها، پروژه‌ها، کارگران، هزینه‌ها و اهداف در یک تصویر روشن.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg></span>
+            <h3 data-i18n="f1t">امروز</h3>
+            <p data-i18n="f1d">کارهای امروز، اولویت‌ها و کارهای عقب‌افتاده؛ با پشتیبانی از هزاران تسک بدون کندی.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="5" height="14" rx="1.5"/><rect x="10" y="5" width="5" height="9" rx="1.5"/><rect x="17" y="5" width="4" height="11" rx="1.5"/></svg></span>
+            <h3 data-i18n="f2t">کانبان</h3>
+            <p data-i18n="f2d">کارت‌ها را بکش و رها کن؛ از فهرست تا در حال انجام، متوقف و انجام‌شده.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V8l7-4v17M11 21h9V11l-9-3"/><path d="M7 9v.01M7 13v.01M7 17v.01M15 12v.01M15 16v.01"/></svg></span>
+            <h3 data-i18n="f3t">پروژه‌های ساختمانی</h3>
+            <p data-i18n="f3d">قرارداد، دریافتی، هزینه، سود، مراحل اجرا، عکس نمونه‌کار و صورت‌وضعیت متراژ.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15 14.5c3.5-.5 6 1.5 6 4.5"/></svg></span>
+            <h3 data-i18n="f4t">کارکرد کارگران</h3>
+            <p data-i18n="f4d">تقویم روزانه، ساعت کار، مزد هفتگی و ماهانه، پرداخت‌ها و مانده حساب هر نیرو.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-5M11 16V7M16 16v-3M21 16V4"/></svg></span>
+            <h3 data-i18n="f5t">مالی و سرمایه‌گذاری</h3>
+            <p data-i18n="f5d">دفتر دریافتی و پرداختی، دسته‌بندی هزینه‌ها، نمودار ماهانه و سبد طلا، دلار و سهام.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg></span>
+            <h3 data-i18n="f6t">اهداف با پیش‌بینی</h3>
+            <p data-i18n="f6d">مبلغ هدف، کنارگذاری ماهانه و زمان رسیدن؛ جلوتر یا عقب‌تر بودن مسیر را ببین.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5V5.5Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/></svg></span>
+            <h3 data-i18n="f7t">کتاب‌خوانی آفلاین</h3>
+            <p data-i18n="f7d">قفسهٔ کتاب، PDF و Word، یادداشت چسبان، تایمر مطالعه و آمار صفحه و دقیقه.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8v8M17 8v8M4 9v6M20 9v6M7 12h10"/></svg></span>
+            <h3 data-i18n="f8t">یادگیری، تمرکز و باشگاه</h3>
+            <p data-i18n="f8d">عادت‌های روزانه، پومودورو، گزارش هفتگی، تمرین باشگاه و عکس‌های پیشرفت بدن.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="whats-new">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker" data-i18n="newKicker">تازه در نسخهٔ ۱٫۹٫۱۷</p>
+          <h2 data-i18n="newTitle">سریع‌تر، سبک‌تر، بی‌صدا در پس‌زمینه</h2>
+          <p class="section-sub" data-i18n="newSub">این نسخه روی روان بودن با داده‌های زیاد و کوچک‌تر شدن پشتیبان‌ها تمرکز دارد.</p>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-value" data-i18n="stat1v">۱۲×</span>
+            <h3 data-i18n="stat1t">پشتیبان کوچک‌تر</h3>
+            <p data-i18n="stat1d">پشتیبان فشردهٔ gzip در نمونهٔ ۵٬۰۰۰ تسک از ۱٫۶ مگابایت به ۱۲۹ کیلوبایت رسید.</p>
+          </article>
+          <article class="stat-card">
+            <span class="stat-value" data-i18n="stat2v">۱۲۰</span>
+            <h3 data-i18n="stat2t">تسک در هر مرحله</h3>
+            <p data-i18n="stat2d">صفحهٔ «امروز» فقط بخش لازم را رندر می‌کند و بقیه با «نمایش بیشتر» اضافه می‌شوند.</p>
+          </article>
+          <article class="stat-card">
+            <span class="stat-value" data-i18n="stat3v">۵</span>
+            <h3 data-i18n="stat3t">نسخهٔ پشتیبان خودکار</h3>
+            <p data-i18n="stat3d">آخرین نسخه‌ها با تاریخچهٔ بازیابی داخل برنامه می‌مانند؛ ساخت پشتیبان رابط را قفل نمی‌کند.</p>
+          </article>
+        </div>
+        <div class="new-list">
+          <div class="new-item">
+            <span class="new-dot" aria-hidden="true"></span>
+            <p data-i18n="newItem1">مالی سریع‌تر: نمودارها فقط تراکنش‌های بازهٔ نمایش را می‌خوانند.</p>
+          </div>
+          <div class="new-item">
+            <span class="new-dot" aria-hidden="true"></span>
+            <p data-i18n="newItem2">بارگذاری تنبل جست‌وجوی سراسری و خروجی CSV کارگران.</p>
+          </div>
+          <div class="new-item">
+            <span class="new-dot" aria-hidden="true"></span>
+            <p data-i18n="newItem3">انتقال یک‌بارهٔ ردیف‌های پروژه به بخش مالی در یک تراکنش.</p>
+          </div>
+        </div>
+        <a class="text-link" href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer">
+          <span data-i18n="fullNotes">مشاهدهٔ همهٔ تغییرات در GitHub</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="screens">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker" data-i18n="screensKicker">نگاهی به داخل برنامه</p>
+          <h2 data-i18n="screensTitle">آرام، خوانا و ساخته‌شده برای هر روز</h2>
+          <p class="section-sub" data-i18n="screensSub">کتاب‌خانه، حالت مطالعه و تایمر؛ نمونه‌ای از بخش کتاب‌خوانی SAZORA.</p>
+        </div>
+        <div class="shot-grid">
+          <figure class="shot">
+            <img src="assets/img/reading-library.png" width="1600" height="1000" alt="SAZORA book library">
+            <figcaption data-i18n="shot1">قفسهٔ کتاب با پیشرفت مطالعه، وضعیت و آمار روزانه</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/img/reading-session.png" width="1600" height="1000" alt="SAZORA reading session">
+            <figcaption data-i18n="shot2">حالت مطالعه با تایمر، یادداشت و تنظیم اندازهٔ متن</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-download" id="download">
+      <div class="container">
+        <div class="download-card">
+          <div class="download-copy">
+            <p class="kicker" data-i18n="downloadKicker">نصب روی ویندوز</p>
+            <h2 data-i18n="downloadTitle">همین حالا SAZORA را نصب کنید</h2>
+            <p data-i18n="downloadSub">فایل نصب را اجرا کنید؛ نسخهٔ قبلی و اطلاعات شما در جای خود می‌ماند. نسخهٔ نصبی هنگام باز شدن، به‌روزرسانی‌ها را خودش بررسی می‌کند.</p>
+            <div class="download-actions">
+              <a class="btn btn-primary btn-lg" href="https://github.com/omidmasumi740-dev/sazora/releases/download/v1.9.17/SAZORA_1.9.17_Setup.exe" data-download="sazora" data-dl-primary>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+                <span data-i18n="downloadSetup">دانلود Setup</span>
+                <span class="btn-version" data-version>1.9.17</span>
+              </a>
+              <a class="btn btn-secondary btn-lg" href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="downloadReleases">صفحهٔ انتشارها</a>
+            </div>
+            <div class="download-alt">
+              <a href="https://github.com/omidmasumi740-dev/sazora/releases/download/v1.9.17/SAZORA-Desktop-v1.9.17.zip" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V4h16v3M12 4v12m0 0 4-4m-4 4-4-4M4 20h16"/></svg>
+                <span data-i18n="downloadPortable">نسخهٔ Portable (ZIP)</span>
+              </a>
+              <a href="https://github.com/omidmasumi740-dev/sazora/releases/download/v1.9.17/SHA256SUMS-v1.9.17.txt" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12h6M9 16h6M9 8h6"/><rect x="4" y="3" width="16" height="18" rx="2"/></svg>
+                <span data-i18n="downloadSums">فایل SHA-256</span>
+              </a>
+            </div>
+          </div>
+          <aside class="download-side">
+            <div class="req-block">
+              <h3 data-i18n="reqTitle">نیازمندی‌ها</h3>
+              <ul>
+                <li><span>Windows 10 / 11</span><span class="mono">x64</span></li>
+                <li><span data-i18n="reqWebview">Microsoft Edge WebView2</span></li>
+                <li><span data-i18n="reqSize">حجم نصب‌کننده</span><span data-size>6.9 MB</span></li>
+                <li><span data-i18n="reqVersion">نسخه</span><span data-version>1.9.17</span></li>
+              </ul>
+            </div>
+            <details class="sha">
+              <summary data-i18n="shaTitle">SHA-256 نصب‌کننده</summary>
+              <code class="sha-code">251fafdcfe11e7dcd25de1e20c4a3e8977e50f3569d92fdd96861d858ebcc603</code>
+            </details>
+            <p class="side-note" data-i18n="downloadNote">SAZORA آفلاین است؛ فایل نصب هیچ داده‌ای از شما نمی‌فرستد.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container narrow">
+        <div class="section-head">
+          <p class="kicker" data-i18n="faqKicker">پرسش‌های رایج</p>
+          <h2 data-i18n="faqTitle">چیزهایی که قبل از نصب خوب است بدانید</h2>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary data-i18n="q1">آیا برای استفاده به اینترنت نیاز دارم؟</summary>
+            <p data-i18n="a1">نه. کارها، پروژه‌ها، مالی، اهداف و کتاب‌خوانی آفلاین کار می‌کنند. فقط بررسی به‌روزرسانی و به‌روزرسانی قیمت دارایی‌ها از اینترنت استفاده می‌کند.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q2">داده‌هایم کجا ذخیره می‌شود؟</summary>
+            <p data-i18n-html="a2">داخل IndexedDB مرورگر داخلی برنامه در مسیر <code>%LocalAppData%\SAZORA\WebView2Data</code>. پشتیبان خودکار هم آخرین ۵ نسخه را داخل برنامه نگه می‌دارد و می‌توانید یک فایل JSON هم در پوشهٔ دلخواه داشته باشید.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q3">به‌روزرسانی خودکار چطور کار می‌کند؟</summary>
+            <p data-i18n="a3">نسخهٔ نصبی هنگام باز شدن، آخرین انتشار GitHub را بررسی می‌کند. با تأیید شما فایل به‌روزرسانی دانلود و SHA-256 آن بررسی می‌شود، سپس برنامه بسته، جایگزین و دوباره باز می‌شود.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q4">کتاب‌خوان چه فایل‌هایی را باز می‌کند؟</summary>
+            <p data-i18n="a4">PDF و اسناد Word به‌صورت آفلاین. قفسه، جلد، یادداشت چسبان، تایمر مطالعه و آمار صفحه و دقیقه هم در همان بخش است.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q5">آیا داده‌ها به سروری فرستاده می‌شوند؟</summary>
+            <p data-i18n="a5">نه. SAZORA برای کار اصلی به حساب کاربری یا سرور نیاز ندارد؛ داده‌ها روی همان ویندوز شما می‌مانند.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q6">روی ویندوز ۷ اجرا می‌شود؟</summary>
+            <p data-i18n="a6">حداقل نسخهٔ پشتیبانی‌شده Windows 10 نسخهٔ 1809 (x64) است. WebView2 هم لازم است؛ اگر نصب نباشد، نصب‌کننده راهنمایی می‌کند.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cross-promo">
+      <div class="container">
+        <div class="cross-card">
+          <img src="assets/img/icon-sortiva.png" width="64" height="64" alt="Sortiva">
+          <div>
+            <p class="kicker" data-i18n="crossKicker">از همین سازنده</p>
+            <h2 data-i18n="crossTitle">Sortiva — فایل‌هایت را مرتب کن</h2>
+            <p data-i18n="crossSub">مرتب‌سازی فایل‌ها بر اساس نوع و تاریخ، تاریخ واقعی عکس‌ها، پیدا کردن تکراری‌ها و زمان‌بندی خودکار برای ویندوز.</p>
+          </div>
+          <a class="btn btn-secondary" href="https://omidmasumi740-dev.github.io/sortiva/" data-i18n="crossCta">دیدن سایت Sortiva</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <img src="assets/img/logo.svg" width="30" height="30" alt="">
+          <span class="brand-name">SAZORA</span>
+        </a>
+        <p data-i18n="footerTag">دستیار آفلاین کار، پروژه، مالی و اهداف.</p>
+        <p class="footer-note" data-i18n="footerNote">داده‌های شما روی دستگاه خودتان می‌ماند.</p>
+      </div>
+      <div class="footer-col">
+        <h3 data-i18n="footerLinks">لینک‌ها</h3>
+        <a href="https://github.com/omidmasumi740-dev/sazora" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="footerReleases">انتشارها</a>
+        <a href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="footerNotes">تغییرات نسخه</a>
+        <a href="https://omidmasumi740-dev.github.io/sortiva/" data-i18n="footerSortiva">Sortiva</a>
+      </div>
+      <div class="footer-col">
+        <h3 data-i18n="footerSupport">حمایت</h3>
+        <a href="https://omidmasumi740-dev.github.io/donate-page/" target="_blank" rel="noopener noreferrer" data-i18n="footerDonate">صفحهٔ دونیت</a>
+        <a href="https://github.com/omidmasumi740-dev" target="_blank" rel="noopener noreferrer" data-i18n="footerAuthor">سایر پروژه‌ها</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© <span id="year">2026</span> SAZORA · <span data-i18n="footerRights">همهٔ حقوق محفوظ است</span></p>
+      <p class="footer-made" data-i18n="footerMade">ساختهٔ Omid Masomi</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

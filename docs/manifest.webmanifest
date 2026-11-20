@@ -1,0 +1,16 @@
+{
+  "name": "SAZORA — Offline work, projects, finance and goals",
+  "short_name": "SAZORA",
+  "description": "Offline Windows assistant for tasks, construction projects, workers, finance, goals and reading.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#ff8c00",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    { "src": "assets/img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/img/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
