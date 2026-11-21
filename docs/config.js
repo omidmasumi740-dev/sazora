@@ -1,0 +1,14 @@
+window.SITE_CONFIG = {
+  CONTACT_EMAIL: 'sazorasupport@gmail.com',
+  SUPABASE_URL: '',
+  SUPABASE_ANON_KEY: '',
+  PRO_PRICE: '',
+  IS_FREE: true,
+  GATED_FEATURES: [],
+  CLOUD_BACKUP_ENABLED: true,
+  VERSION: '1.9.18',
+  FILE_SIZE: 7217206,
+  SHA256: '251fafdcfe11e7dcd25de1e20c4a3e8977e50f3569d92fdd96861d858ebcc603',
+  VIRUSTOTAL_URL: '',
+  DOWNLOAD_URL: ''
+};

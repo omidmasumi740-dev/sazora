@@ -311,14 +311,13 @@
   };
 
   var faDigits = '۰۱۲۳۴۵۶۷۸۹';
+  var CFG = window.SITE_CONFIG || {};
+  var repoBase = 'https://github.com/omidmasumi740-dev/sazora/releases/download/v';
   var state = {
     lang: document.documentElement.lang === 'en' ? 'en' : 'fa',
-    version: '1.9.18',
-    size: 7217206
+    version: CFG.VERSION || '1.9.18',
+    size: Number(CFG.FILE_SIZE) || 7217206
   };
-  var CACHE_KEY = 'sazora-release-v1';
-  var CACHE_MS = 6 * 60 * 60 * 1000;
-  var API = 'https://api.github.com/repos/omidmasumi740-dev/sazora/releases/latest';
 
   function toFa(value) {
     return String(value).replace(/\d/g, function (d) {
@@ -342,6 +341,27 @@
     });
     document.querySelectorAll('[data-size]').forEach(function (el) {
       el.textContent = formatSize(state.size);
+    });
+  }
+
+  function releaseFile(name) {
+    return repoBase + state.version + '/' + name;
+  }
+
+  function renderRelease() {
+    renderNumbers();
+    var links = {
+      sazora: CFG.DOWNLOAD_URL || releaseFile('SAZORA_' + state.version + '_Setup.exe'),
+      'sazora-zip': releaseFile('SAZORA-Desktop-v' + state.version + '.zip'),
+      'sazora-sums': releaseFile('SHA256SUMS-v' + state.version + '.txt')
+    };
+    Object.keys(links).forEach(function (key) {
+      document.querySelectorAll('[data-download="' + key + '"]').forEach(function (el) {
+        el.setAttribute('href', links[key]);
+      });
+    });
+    document.querySelectorAll('[data-sha]').forEach(function (el) {
+      el.textContent = CFG.SHA256 || '';
     });
   }
 
@@ -376,69 +396,10 @@
     var toggle = document.getElementById('langToggle');
     if (toggle) toggle.setAttribute('aria-label', t.langAria);
 
-    renderNumbers();
+    renderRelease();
     try {
       localStorage.setItem('sazora-lang', lang);
     } catch (e) {}
-  }
-
-  function applyRelease(release) {
-    if (!release) return;
-    if (release.version) state.version = release.version;
-    if (release.size) state.size = release.size;
-    if (release.url) {
-      document.querySelectorAll('[data-download="sazora"]').forEach(function (a) {
-        a.setAttribute('href', release.url);
-      });
-    }
-    renderNumbers();
-  }
-
-  function loadLatestRelease() {
-    var cached = null;
-    try {
-      cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-    } catch (e) {}
-    if (cached && cached.release && Date.now() - cached.ts < CACHE_MS) {
-      applyRelease(cached.release);
-      return;
-    }
-
-    var controller = new AbortController();
-    var timer = setTimeout(function () {
-      controller.abort();
-    }, 5000);
-
-    fetch(API, {
-      headers: { Accept: 'application/vnd.github+json' },
-      signal: controller.signal
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
-      })
-      .then(function (data) {
-        var assets = data.assets || [];
-        var asset = assets.filter(function (a) {
-          return /setup/i.test(a.name) && /\.exe$/i.test(a.name);
-        })[0] || assets.filter(function (a) {
-          return /\.exe$/i.test(a.name);
-        })[0];
-        if (!asset) return;
-        var release = {
-          version: String(data.tag_name || '').replace(/^v/i, '') || state.version,
-          size: asset.size || state.size,
-          url: asset.browser_download_url || ''
-        };
-        applyRelease(release);
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), release: release }));
-        } catch (e) {}
-      })
-      .catch(function () {})
-      .finally(function () {
-        clearTimeout(timer);
-      });
   }
 
   function init() {
@@ -460,8 +421,6 @@
 
     var year = document.getElementById('year');
     if (year) year.textContent = String(new Date().getFullYear());
-
-    setTimeout(loadLatestRelease, 900);
   }
 
   init();
