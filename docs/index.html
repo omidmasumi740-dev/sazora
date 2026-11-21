@@ -6,7 +6,12 @@
   <meta name="theme-color" content="#0b0d10">
   <title>SAZORA — مدیریت پروژهٔ ساختمانی، کارگر و مالی، آفلاین</title>
   <meta name="description" content="SAZORA یک مدیر پروژهٔ آفلاین برای ویندوز است: قرارداد، دریافتی و هزینهٔ پروژه، مراحل اجرا با تاریخ شمسی، کارکرد و مزد کارگران، صورت‌وضعیت متراژ و مالی — داده‌ها روی دستگاه خودتان می‌ماند.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://*.supabase.co; base-uri 'self'; form-action 'self'; object-src 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="canonical" href="https://omidmasumi740-dev.github.io/sazora/">
+  <link rel="alternate" hreflang="fa" href="https://omidmasumi740-dev.github.io/sazora/?lang=fa">
+  <link rel="alternate" hreflang="en" href="https://omidmasumi740-dev.github.io/sazora/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://omidmasumi740-dev.github.io/sazora/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SAZORA">
   <meta property="og:title" content="SAZORA — مدیریت پروژهٔ ساختمانی، کارگر و مالی، آفلاین">
@@ -57,7 +62,7 @@
       </a>
       <nav class="nav-links" aria-label="Primary">
         <a href="#features" data-i18n="navFeatures">پروژه و کارگاه</a>
-        <a href="#whats-new" data-i18n="navNew">تازه‌ها</a>
+        <a href="account.html" data-i18n="navAccount">حساب</a>
         <a href="#screens" data-i18n="navScreens">تصاویر</a>
         <a href="#download" data-i18n="navDownload">دانلود</a>
         <a href="#faq" data-i18n="navFaq">سوالات</a>
@@ -84,7 +89,7 @@
             <span class="pulse-dot" aria-hidden="true"></span>
             <span><span data-i18n="heroBadgePrefix">نسخهٔ</span> <span data-version>1.9.18</span> <span data-i18n="heroBadgeSuffix">منتشر شد</span></span>
           </div>
-          <h1 data-i18n-html="heroTitle">کارگاه، قرارداد و کارگرت را <span class="grad">یک‌جا مدیریت کن.</span></h1>
+          <h1><span data-i18n="heroTitleA">مدیریت کار، پروژه و مالی کارگاه</span> <span class="grad" data-i18n="heroTitleB">در یک اپ آفلاین.</span></h1>
           <p class="lede" data-i18n="heroLede">SAZORA یک مدیر پروژهٔ ساختمانی آفلاین برای ویندوز است: قرارداد، دریافتی و هزینهٔ هر پروژه، مراحل اجرا با تاریخ شمسی، کارکرد و مزد کارگران، صورت‌وضعیت متراژ و مالی — همه روی دستگاه خودت، بدون اینترنت.</p>
           <div class="cta-row">
             <a class="btn btn-primary btn-lg" href="https://github.com/omidmasumi740-dev/sazora/releases/download/v1.9.18/SAZORA_1.9.18_Setup.exe" data-download="sazora" data-dl-primary>
@@ -93,6 +98,10 @@
             </a>
             <a class="btn btn-secondary btn-lg" href="#features" data-i18n="heroSecondary">دیدن قابلیت‌ها</a>
           </div>
+          <p class="free-line">
+            <span class="free-badge" data-i18n="freeBadge">رایگان</span>
+            <span data-i18n="heroFree">رایگان است. بدون ثبت‌نام هم کامل کار می‌کند.</span>
+          </p>
           <p class="hero-note">
             <span data-i18n="heroNote">نسخهٔ</span>
             <span data-version>1.9.18</span>
@@ -108,7 +117,7 @@
             </li>
             <li>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
-              <span data-i18n="heroPoint2">بدون اینترنت و بدون حساب آنلاین؛ داده روی دستگاه</span>
+              <span data-i18n="heroPoint2">کاملاً آفلاین؛ ورود اختیاری فقط برای پشتیبان ابری</span>
             </li>
             <li>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
@@ -168,7 +177,7 @@
         <div class="section-head">
           <p class="kicker" data-i18n="featuresKicker">مدیریت پروژهٔ ساختمانی</p>
           <h2 data-i18n="featuresTitle">از قرارداد تا تحویل، بدون دفتر و ماشین‌حساب</h2>
-          <p class="section-sub" data-i18n="featuresSub">هر بخش، تصویری واقعی از خود برنامه با دادهٔ نمونه است — نه ماکت. پروژه‌ها، مراحل، مالی، متراژ و کارگران به هم وصل‌اند.</p>
+          <p class="section-sub" data-i18n="featuresSub">ساخته‌شده برای پیمانکار، سرکارگر، بنا و دفتر فنی پروژه‌های ساختمانی؛ هر بخش، تصویری واقعی از خود برنامه با دادهٔ نمونه است — نه ماکت. پروژه‌ها، مراحل، مالی، متراژ و کارگران به هم وصل‌اند.</p>
         </div>
 
         <div class="feature-rows">
@@ -311,6 +320,11 @@
           </article>
         </div>
 
+        <div class="aux-head">
+          <p class="kicker" data-i18n="auxKicker">فراتر از کارگاه</p>
+          <h3 data-i18n="auxTitle">امکانات جانبی</h3>
+          <p data-i18n="auxSub">اگر خواستید، کارهای روزانه، عادت‌ها، اهداف، ورزش، مالی شخصی و کتاب‌خوانی هم در همین اپ آفلاین هستند.</p>
+        </div>
         <div class="mini-grid">
           <article class="mini-card">
             <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg></span>
@@ -319,13 +333,23 @@
           </article>
           <article class="mini-card">
             <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-5M11 16V7M16 16v-3M21 16V4"/></svg></span>
-            <h3 data-i18n="m2t">مالی و سرمایه‌گذاری</h3>
-            <p data-i18n="m2d">دفتر دریافتی و پرداختی، نمودار ماهانه و سبد طلا، دلار و سهام.</p>
+            <h3 data-i18n="m2t">مالی شخصی</h3>
+            <p data-i18n="m2d">دفتر دریافتی و پرداختی، نمودار ماهانه و سبد طلا، دلار و سهام — جدا از مالی پروژه.</p>
+          </article>
+          <article class="mini-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16l-7-4-7 4V4Z"/><path d="M9 9h6"/></svg></span>
+            <h3 data-i18n="m5t">عادت‌ها</h3>
+            <p data-i18n="m5d">عادت‌های روزانه را با زنجیرهٔ تکرار و مرور هفتگی دنبال کنید.</p>
           </article>
           <article class="mini-card">
             <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg></span>
             <h3 data-i18n="m3t">اهداف با پیش‌بینی</h3>
             <p data-i18n="m3d">مبلغ هدف، پس‌انداز ماهانه و تاریخ رسیدن؛ جلوتر یا عقب‌تر بودن مسیر.</p>
+          </article>
+          <article class="mini-card">
+            <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 5v14M6 12h12"/><path d="M3 8v8M21 8v8"/></svg></span>
+            <h3 data-i18n="m6t">ورزش</h3>
+            <p data-i18n="m6d">برنامهٔ تمرین و روزهای ورزش، کنار بقیهٔ کارهای روزانه.</p>
           </article>
           <article class="mini-card">
             <span class="feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5V5.5Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/></svg></span>
@@ -336,51 +360,6 @@
       </div>
     </section>
 
-    <section class="section section-alt" id="whats-new">
-      <div class="container">
-        <div class="section-head">
-          <p class="kicker" data-i18n="newKicker">تازه در نسخهٔ ۱٫۹٫۱۸</p>
-          <h2 data-i18n="newTitle">بکاپ ساده‌تر، امن‌تر، بدون رمز</h2>
-          <p class="section-sub" data-i18n="newSub">دو دکمهٔ روشن برای ذخیره و بازیابی، رمزنگاری خودکار ابری و دسترسی مستقیم به پشتیبانی.</p>
-        </div>
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span class="stat-value" data-i18n="stat1v">۲</span>
-            <h3 data-i18n="stat1t">دکمه برای همه چیز</h3>
-            <p data-i18n="stat1d">«ذخیره داده» و «بازیابی داده»؛ بقیهٔ گزینه‌ها داخل پنجرهٔ همان دکمه‌اند و تنظیمات شلوغ نیست.</p>
-          </article>
-          <article class="stat-card">
-            <span class="stat-value" data-i18n="stat2v">AES-256</span>
-            <h3 data-i18n="stat2t">رمزنگاری خودکار</h3>
-            <p data-i18n="stat2d">کلید را خود برنامه می‌سازد و با DPAPI روی دستگاه نگه می‌دارد؛ رمزی از شما پرسیده نمی‌شود.</p>
-          </article>
-          <article class="stat-card">
-            <span class="stat-value" data-i18n="stat3v">۳</span>
-            <h3 data-i18n="stat3t">مسیر برای بازیابی</h3>
-            <p data-i18n="stat3d">از فایل، از نسخه‌های خودکار داخل برنامه یا از بکاپ ابری — همه در یک پنجره.</p>
-          </article>
-        </div>
-        <div class="new-list">
-          <div class="new-item">
-            <span class="new-dot" aria-hidden="true"></span>
-            <p data-i18n="newItem1">ایمیل پشتیبانی sazorasupport@gmail.com در تنظیمات و همین صفحه در دسترس است.</p>
-          </div>
-          <div class="new-item">
-            <span class="new-dot" aria-hidden="true"></span>
-            <p data-i18n="newItem2">بکاپ‌های قدیمی رمزدار همچنان با همان رمز قبلی بازیابی می‌شوند.</p>
-          </div>
-          <div class="new-item">
-            <span class="new-dot" aria-hidden="true"></span>
-            <p data-i18n="newItem3">به‌روزرسانی، حافظه و پاک‌سازی داده داخل بخش‌های جمع‌شونده رفتند.</p>
-          </div>
-        </div>
-        <a class="text-link" href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer">
-          <span data-i18n="fullNotes">مشاهدهٔ همهٔ تغییرات در GitHub</span>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
-      </div>
-    </section>
-
     <section class="section" id="screens">
       <div class="container">
         <div class="section-head">
@@ -388,32 +367,83 @@
           <h2 data-i18n="screensTitle">بقیهٔ بخش‌ها هم همان‌جاست</h2>
           <p class="section-sub" data-i18n="screensSub">امروز، کانبان، مالی، اهداف و کتاب‌خوانی — همه با دادهٔ نمونه و در همان پنجرهٔ آفلاین.</p>
         </div>
-        <div class="shot-grid">
-          <figure class="shot">
-            <img src="assets/img/shots/sazora-today.png" width="2880" height="1800" alt="SAZORA today view">
-            <figcaption data-i18n="shot1">امروز: کارهای روز، عقب‌افتاده‌ها و اولویت‌ها</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="assets/img/shots/sazora-board.png" width="2880" height="1800" alt="SAZORA kanban board">
-            <figcaption data-i18n="shot2">کانبان: از «در انتظار» تا «انجام‌شده»</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="assets/img/shots/sazora-finance.png" width="2880" height="1800" alt="SAZORA finance ledger">
-            <figcaption data-i18n="shot3">مالی: تراکنش‌ها، دسته‌بندی و نمودار ماهانه</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="assets/img/shots/sazora-goals.png" width="2880" height="1800" alt="SAZORA goals with forecasts">
-            <figcaption data-i18n="shot4">اهداف: پیش‌بینی رسیدن به هدف</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="assets/img/reading-library.png" width="1600" height="1000" alt="SAZORA book library">
-            <figcaption data-i18n="shot5">کتاب‌خانه: قفسه، جلد و پیشرفت مطالعه</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="assets/img/reading-session.png" width="1600" height="1000" alt="SAZORA reading session">
-            <figcaption data-i18n="shot6">مطالعه: تایمر، یادداشت و اندازهٔ متن</figcaption>
-          </figure>
+        <div class="gallery" data-gallery>
+          <div class="gallery-tabs" role="tablist" aria-label="SAZORA screens">
+            <button class="gallery-tab is-active" id="gtab-projects" type="button" role="tab" aria-selected="true" aria-controls="gpanel-projects" tabindex="0" data-gallery-tab="projects" data-i18n="gProjects">پروژه‌ها</button>
+            <button class="gallery-tab" id="gtab-today" type="button" role="tab" aria-selected="false" aria-controls="gpanel-today" tabindex="-1" data-gallery-tab="today" data-i18n="gToday">امروز</button>
+            <button class="gallery-tab" id="gtab-board" type="button" role="tab" aria-selected="false" aria-controls="gpanel-board" tabindex="-1" data-gallery-tab="board" data-i18n="gBoard">کانبان</button>
+            <button class="gallery-tab" id="gtab-workers" type="button" role="tab" aria-selected="false" aria-controls="gpanel-workers" tabindex="-1" data-gallery-tab="workers" data-i18n="gWorkers">کارگران</button>
+            <button class="gallery-tab" id="gtab-finance" type="button" role="tab" aria-selected="false" aria-controls="gpanel-finance" tabindex="-1" data-gallery-tab="finance" data-i18n="gFinance">مالی</button>
+            <button class="gallery-tab" id="gtab-goals" type="button" role="tab" aria-selected="false" aria-controls="gpanel-goals" tabindex="-1" data-gallery-tab="goals" data-i18n="gGoals">اهداف</button>
+            <button class="gallery-tab" id="gtab-reading" type="button" role="tab" aria-selected="false" aria-controls="gpanel-reading" tabindex="-1" data-gallery-tab="reading" data-i18n="gReading">کتاب‌خوانی</button>
+          </div>
+          <div class="gallery-stage">
+            <figure class="gallery-shot" id="gpanel-projects" role="tabpanel" aria-labelledby="gtab-projects" data-gallery-panel="projects">
+              <img src="assets/img/shots/sazora-project-overview.png" width="2880" height="1800" alt="SAZORA project overview with contract, costs and progress" loading="lazy">
+              <figcaption data-i18n="shotProjects">پروژه‌ها: قرارداد، دریافتی، هزینه، سود و درصد پیشرفت</figcaption>
+            </figure>
+            <figure class="gallery-shot" id="gpanel-today" role="tabpanel" aria-labelledby="gtab-today" data-gallery-panel="today" hidden>
+              <img src="assets/img/shots/sazora-today.png" width="2880" height="1800" alt="SAZORA today view with priorities and overdue tasks" loading="lazy">
+              <figcaption data-i18n="shotToday">امروز: کارهای روز، عقب‌افتاده‌ها و اولویت‌ها</figcaption>
+            </figure>
+            <figure class="gallery-shot" id="gpanel-board" role="tabpanel" aria-labelledby="gtab-board" data-gallery-panel="board" hidden>
+              <img src="assets/img/shots/sazora-board.png" width="2880" height="1800" alt="SAZORA kanban board with work items" loading="lazy">
+              <figcaption data-i18n="shotBoard">کانبان: از «در انتظار» تا «انجام‌شده»</figcaption>
+            </figure>
+            <figure class="gallery-shot" id="gpanel-workers" role="tabpanel" aria-labelledby="gtab-workers" data-gallery-panel="workers" hidden>
+              <img src="assets/img/shots/sazora-workers.png" width="2880" height="1800" alt="SAZORA workers attendance calendar and wages" loading="lazy">
+              <figcaption data-i18n="shotWorkers">کارگران: تقویم کارکرد، مزد و ماندهٔ حساب</figcaption>
+            </figure>
+            <figure class="gallery-shot" id="gpanel-finance" role="tabpanel" aria-labelledby="gtab-finance" data-gallery-panel="finance" hidden>
+              <img src="assets/img/shots/sazora-finance.png" width="2880" height="1800" alt="SAZORA finance ledger and monthly chart" loading="lazy">
+              <figcaption data-i18n="shotFinance">مالی: تراکنش‌ها، دسته‌بندی و نمودار ماهانه</figcaption>
+            </figure>
+            <figure class="gallery-shot" id="gpanel-goals" role="tabpanel" aria-labelledby="gtab-goals" data-gallery-panel="goals" hidden>
+              <img src="assets/img/shots/sazora-goals.png" width="2880" height="1800" alt="SAZORA goals with forecasts" loading="lazy">
+              <figcaption data-i18n="shotGoals">اهداف: پیش‌بینی رسیدن به هدف</figcaption>
+            </figure>
+            <figure class="gallery-shot" id="gpanel-reading" role="tabpanel" aria-labelledby="gtab-reading" data-gallery-panel="reading" hidden>
+              <img src="assets/img/reading-library.png" width="1600" height="1000" alt="SAZORA offline book library with covers" loading="lazy">
+              <figcaption data-i18n="shotReading">کتاب‌خانه: قفسه، جلد و پیشرفت مطالعه</figcaption>
+            </figure>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="account">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker" data-i18n="accountKicker">حساب اختیاری</p>
+          <h2 data-i18n="accountTitle">بدون حساب / با حساب رایگان</h2>
+          <p class="section-sub" data-i18n="accountSub">SAZORA برای کار اصلی حساب نمی‌خواهد. حساب رایگان فقط پشتیبان ابری رمزنگاری‌شده را اضافه می‌کند.</p>
+        </div>
+        <div class="account-grid">
+          <article class="account-card">
+            <h3 data-i18n="noAccTitle">بدون حساب</h3>
+            <p class="account-card-sub" data-i18n="noAccSub">همهٔ کار روزمره، کامل و آفلاین.</p>
+            <ul class="check-list">
+              <li data-i18n="noAcc1">پروژه‌ها، مراحل اجرا، مالی، متراژ و کارگران</li>
+              <li data-i18n="noAcc2">ذخیرهٔ خودکار روی همان دستگاه</li>
+              <li data-i18n="noAcc3">پشتیبان محلی و فایل JSON در پوشهٔ دلخواه</li>
+              <li data-i18n="noAcc4">بررسی به‌روزرسانی و قیمت دارایی‌ها</li>
+            </ul>
+            <p class="account-card-note" data-i18n="noAccNote">هیچ دادهٔ کاری از دستگاه خارج نمی‌شود.</p>
+          </article>
+          <article class="account-card account-card-hl">
+            <h3 data-i18n="accTitle">با حساب رایگان</h3>
+            <p class="account-card-sub" data-i18n="accSub">برای پشتیبان ابری و بازیابی روی دستگاه جدید.</p>
+            <ul class="check-list">
+              <li data-cloud-item data-i18n="acc1">پشتیبان ابری رمزنگاری‌شده (AES-256) در فضای خصوصی حساب</li>
+              <li data-cloud-item data-i18n="acc2">بازیابی روی رایانهٔ جدید با همان حساب</li>
+              <li data-i18n="acc3">ایمیل فقط برای ورود و بازیابی رمز استفاده می‌شود</li>
+              <li data-i18n="acc4">ورود و خروج هر زمان؛ حذف حساب با یک ایمیل</li>
+            </ul>
+            <p class="cloud-soon" data-cloud-soon hidden data-i18n="cloudSoon">پشتیبان ابری: به‌زودی</p>
+            <a class="btn btn-primary account-btn" href="account.html" data-i18n="accCta">ساخت حساب رایگان</a>
+          </article>
+        </div>
+        <p class="account-foot" data-account-note data-i18n="accountFoot">بدون ثبت‌نام هم کامل کار می‌کند. حساب رایگان فقط برای پشتیبان ابری لازم است.</p>
       </div>
     </section>
 
@@ -431,6 +461,18 @@
                 <span class="btn-version" data-version>1.9.18</span>
               </a>
               <a class="btn btn-secondary btn-lg" href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="downloadReleases">صفحهٔ انتشارها</a>
+            </div>
+            <p class="download-account" data-account-note data-i18n="downloadAccountNote">بدون ثبت‌نام هم کامل کار می‌کند. حساب رایگان فقط برای پشتیبان ابری لازم است.</p>
+            <div class="verify">
+              <p class="verify-title" data-i18n="verifyTitle">قبل از اجرا، فایل را بررسی کنید</p>
+              <div class="hash-row">
+                <code class="sha-code" dir="ltr" data-sha>251fafdcfe11e7dcd25de1e20c4a3e8977e50f3569d92fdd96861d858ebcc603</code>
+                <button class="copy-btn" id="copySha" type="button" data-i18n="copySha">کپی هش</button>
+              </div>
+              <p class="verify-how" data-i18n="verifyHow">مقدار زیر را با PowerShell مقایسه کنید (در پوشهٔ دانلود):</p>
+              <code class="verify-cmd" dir="ltr">Get-FileHash .\SAZORA_<span data-version-raw>1.9.18</span>_Setup.exe -Algorithm SHA256</code>
+              <p class="verify-msg" id="copyMsg" role="status" hidden></p>
+              <a class="verify-vt" id="vtLink" href="" target="_blank" rel="noopener noreferrer" hidden data-i18n="verifyVt">اسکن VirusTotal این نسخه</a>
             </div>
             <div class="download-alt">
               <a href="https://github.com/omidmasumi740-dev/sazora/releases/download/v1.9.18/SAZORA-Desktop-v1.9.18.zip" data-download="sazora-zip" target="_blank" rel="noopener noreferrer">
@@ -453,11 +495,7 @@
                 <li><span data-i18n="reqVersion">نسخه</span><span data-version>1.9.18</span></li>
               </ul>
             </div>
-            <details class="sha">
-              <summary data-i18n="shaTitle">SHA-256 نصب‌کننده</summary>
-              <code class="sha-code" data-sha>251fafdcfe11e7dcd25de1e20c4a3e8977e50f3569d92fdd96861d858ebcc603</code>
-            </details>
-            <p class="side-note" data-i18n="downloadNote">SAZORA آفلاین است؛ فایل نصب هیچ داده‌ای از شما نمی‌فرستد.</p>
+            <p class="side-note" data-i18n="downloadNote">SAZORA آفلاین است؛ کار اصلی هیچ داده‌ای نمی‌فرستد. فقط بررسی به‌روزرسانی و قیمت دارایی‌ها به اینترنت وصل می‌شود.</p>
           </aside>
         </div>
       </div>
@@ -476,7 +514,7 @@
           </details>
           <details class="faq-item">
             <summary data-i18n="q2">داده‌هایم کجا ذخیره می‌شود؟</summary>
-            <p data-i18n-html="a2">داخل IndexedDB مرورگر داخلی برنامه در مسیر <code>%LocalAppData%\SAZORA\WebView2Data</code>. پشتیبان خودکار هم آخرین ۵ نسخه را داخل برنامه نگه می‌دارد و می‌توانید یک فایل JSON هم در پوشهٔ دلخواه داشته باشید.</p>
+            <p><span data-i18n="a2a">داخل IndexedDB مرورگر داخلی برنامه در مسیر</span> <code dir="ltr">%LocalAppData%\SAZORA\WebView2Data</code> <span data-i18n="a2b">ذخیره می‌شود. پشتیبان خودکار هم آخرین ۵ نسخه را داخل برنامه نگه می‌دارد و می‌توانید یک فایل JSON هم در پوشهٔ دلخواه داشته باشید.</span></p>
           </details>
           <details class="faq-item">
             <summary data-i18n="q3">به‌روزرسانی خودکار چطور کار می‌کند؟</summary>
@@ -488,13 +526,87 @@
           </details>
           <details class="faq-item">
             <summary data-i18n="q5">آیا داده‌ها به سروری فرستاده می‌شوند؟</summary>
-            <p data-i18n="a5">نه. SAZORA برای کار اصلی به حساب کاربری یا سرور نیاز ندارد؛ داده‌ها روی همان ویندوز شما می‌مانند.</p>
+            <p data-i18n="a5">کاملاً آفلاین کار می‌کند. ورود اختیاری است و فقط برای پشتیبان ابری لازم است. بدون ورود هیچ دادهٔ کاری ارسال نمی‌شود؛ فقط بررسی به‌روزرسانی و قیمت دارایی‌ها به اینترنت وصل می‌شود.</p>
           </details>
           <details class="faq-item">
             <summary data-i18n="q6">روی ویندوز ۷ اجرا می‌شود؟</summary>
-            <p data-i18n="a6">حداقل نسخهٔ پشتیبانی‌شده Windows 10 نسخهٔ 1809 (x64) است. WebView2 هم لازم است؛ اگر نصب نباشد، نصب‌کننده راهنمایی می‌کند.</p>
+            <p data-i18n="a6">حداقل نسخهٔ پشتیبانی‌شده Windows 10 نسخهٔ 1809 (x64) است.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q7">چرا حساب بسازم؟ چه مزیتی دارد؟</summary>
+            <p data-i18n="a7">کار اصلی اپ بدون حساب است. حساب رایگان پشتیبان ابری رمزنگاری‌شده و بازیابی روی رایانهٔ جدید را اضافه می‌کند و به شما اجازه می‌دهد وضعیت پشتیبان‌ها را ببینید. ایمیل فقط برای ورود و بازیابی رمز استفاده می‌شود.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q8">پشتیبان ابری کجا ذخیره می‌شود و چه کسی آن را می‌بیند؟</summary>
+            <p data-i18n="a8">فایل پشتیبان رمزنگاری‌شده در فضای خصوصی حساب شما در سرور Supabase ذخیره می‌شود و فقط با ورود همان حساب قابل بازیابی است. ما ادعای رمزنگاری سرتاسری نمی‌کنیم؛ به فایل‌های شما در دستگاه دسترسی نداریم و پشتیبان هم بدون حساب شما در دسترس نیست.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q9">چطور حساب و پشتیبان‌هایم را حذف کنم؟</summary>
+            <p><span data-i18n="a9a">از همان صفحهٔ حساب پس از ورود، گزینهٔ حذف حساب را بزنید؛ پشتیبان‌های ابری هم پاک می‌شوند. اگر دسترسی نداشتید، به</span> <span dir="ltr">sazorasupport@gmail.com</span> <span data-i18n="a9b">ایمیل بزنید. داده‌های محلی روی دستگاه با حذف حساب پاک نمی‌شوند و خودتان باید پوشهٔ داده را پاک کنید.</span></p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q10">ویندوز هشدار SmartScreen می‌دهد؛ فایل امن است؟</summary>
+            <p data-i18n="a10">نصب‌کننده امضای دیجیتال تجاری ندارد، بنابراین SmartScreen ممکن است هشدار «ناشر ناشناس» بدهد. SHA-256 همین صفحه را با PowerShell مقایسه کنید؛ اگر یکی بود، فایل همان نسخهٔ رسمی است. برای اطمینان بیشتر، فایل را در VirusTotal هم اسکن کنید.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q11">اگر پوشهٔ دادهٔ برنامه را پاک کنم چه می‌شود؟</summary>
+            <p data-i18n="a11">همهٔ پروژه‌ها، مالی، کارکرد و تنظیمات محلی از بین می‌رود. اگر پشتیبان ابری یا فایل JSON داشته باشید، با آنها برمی‌گردد. این کار را فقط بعد از گرفتن پشتیبان انجام دهید.</p>
+          </details>
+          <details class="faq-item">
+            <summary data-i18n="q12">آیا برنامه به WebView2 نیاز دارد؟</summary>
+            <p data-i18n="a12">بله، رابط برنامه با Microsoft Edge WebView2 اجرا می‌شود. اگر روی سیستم نصب نباشد، نصب‌کننده در همان مرحله راهنمایی می‌کند که آن را نصب کنید.</p>
           </details>
         </div>
+      </div>
+    </section>
+
+    <section class="section" id="whats-new">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker" data-i18n="newKicker">تازه در نسخهٔ ۱٫۹٫۱۸</p>
+          <h2 data-i18n="newTitle">بکاپ ساده‌تر، امن‌تر، بدون رمز</h2>
+          <p class="section-sub" data-i18n="newSub">دو دکمهٔ روشن برای ذخیره و بازیابی، رمزنگاری خودکار ابری و دسترسی مستقیم به پشتیبانی.</p>
+        </div>
+        <details class="new-collapse">
+          <summary data-i18n="newDetails">جزئیات تغییرات این نسخه</summary>
+          <div class="new-body">
+            <div class="stats-grid">
+              <article class="stat-card">
+                <span class="stat-value" data-i18n="stat1v">۲</span>
+                <h3 data-i18n="stat1t">دکمه برای همه چیز</h3>
+                <p data-i18n="stat1d">«ذخیره داده» و «بازیابی داده»؛ بقیهٔ گزینه‌ها داخل پنجرهٔ همان دکمه‌اند و تنظیمات شلوغ نیست.</p>
+              </article>
+              <article class="stat-card">
+                <span class="stat-value" data-i18n="stat2v">AES-256</span>
+                <h3 data-i18n="stat2t">رمزنگاری خودکار</h3>
+                <p data-i18n="stat2d">کلید را خود برنامه می‌سازد و با DPAPI روی دستگاه نگه می‌دارد؛ رمزی از شما پرسیده نمی‌شود.</p>
+              </article>
+              <article class="stat-card">
+                <span class="stat-value" data-i18n="stat3v">۳</span>
+                <h3 data-i18n="stat3t">مسیر برای بازیابی</h3>
+                <p data-i18n="stat3d">از فایل، از نسخه‌های خودکار داخل برنامه یا از بکاپ ابری — همه در یک پنجره.</p>
+              </article>
+            </div>
+            <div class="new-list">
+              <div class="new-item">
+                <span class="new-dot" aria-hidden="true"></span>
+                <p data-i18n="newItem1">ایمیل پشتیبانی sazorasupport@gmail.com در تنظیمات و همین صفحه در دسترس است.</p>
+              </div>
+              <div class="new-item">
+                <span class="new-dot" aria-hidden="true"></span>
+                <p data-i18n="newItem2">بکاپ‌های قدیمی رمزدار همچنان با همان رمز قبلی بازیابی می‌شوند.</p>
+              </div>
+              <div class="new-item">
+                <span class="new-dot" aria-hidden="true"></span>
+                <p data-i18n="newItem3">به‌روزرسانی، حافظه و پاک‌سازی داده داخل بخش‌های جمع‌شونده رفتند.</p>
+              </div>
+            </div>
+            <a class="text-link" href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer">
+              <span data-i18n="fullNotes">مشاهدهٔ همهٔ تغییرات در GitHub</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -522,12 +634,16 @@
         </a>
         <p data-i18n="footerTag">مدیر پروژهٔ ساختمانی و مالی، آفلاین روی ویندوز.</p>
         <p class="footer-note" data-i18n="footerNote">داده‌های شما روی دستگاه خودتان می‌ماند.</p>
+        <p class="footer-about" data-i18n="footerAbout">ساختهٔ Omid Masomi · کد و انتشارها روی GitHub · بدون تبلیغ و ردیاب.</p>
       </div>
       <div class="footer-col">
         <h3 data-i18n="footerLinks">لینک‌ها</h3>
         <a href="https://github.com/omidmasumi740-dev/sazora" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="footerReleases">انتشارها</a>
         <a href="https://github.com/omidmasumi740-dev/sazora/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="footerNotes">تغییرات نسخه</a>
+        <a href="account.html" data-i18n="footerAccount">حساب و پشتیبان ابری</a>
+        <a href="privacy.html" data-i18n="footerPrivacy">حریم خصوصی</a>
+        <a href="contact.html" data-i18n="footerContactPage">تماس با ما</a>
         <a href="https://omidmasumi740-dev.github.io/sortiva/" data-i18n="footerSortiva">Sortiva</a>
       </div>
       <div class="footer-col">
