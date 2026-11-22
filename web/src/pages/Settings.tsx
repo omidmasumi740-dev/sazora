@@ -1047,6 +1047,18 @@ export default function SettingsPage() {
             </a>
           </span>
           <span className="text-muted">
+            {s.lang === 'fa' ? 'وب‌سایت: ' : 'Website: '}
+            <a
+              className="text-ink underline"
+              href="https://sazora-site.pages.dev/"
+              target="_blank"
+              rel="noreferrer"
+              dir="ltr"
+            >
+              sazora-site.pages.dev
+            </a>
+          </span>
+          <span className="text-muted">
             {t('settings.storage')}: <b className="text-ink">IndexedDB — {t('settings.storageHint')}</b>
           </span>
           <span className="text-muted">
@@ -1061,6 +1073,9 @@ export default function SettingsPage() {
             rel="noreferrer"
           >
             ☕ {s.lang === 'fa' ? 'حمایت مالی (Donate)' : 'Donate'}
+          </a>
+          <a className="btn" href="https://sazora-site.pages.dev/" target="_blank" rel="noreferrer">
+            🌐 {s.lang === 'fa' ? 'سایت رسمی' : 'Official site'}
           </a>
           <a className="btn" href="https://github.com/omidmasumi740-dev" target="_blank" rel="noreferrer">
             ⬇ {s.lang === 'fa' ? 'اپدیت‌ها و نسخه‌های جدید در گیت‌هاب' : 'Updates & new versions on GitHub'}
