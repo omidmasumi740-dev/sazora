@@ -1,8 +1,7 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react'
 import { HashRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from './db/schema'
+import { db, type Project, type Task, type Transaction, type Worker } from './db/schema'
 import { Sidebar, Topbar } from './ui/layout'
 import TodayPage from './pages/Today'
 import InboxPage from './pages/Inbox'
@@ -17,7 +16,17 @@ import BoardPage from './pages/Board'
 import SettingsPage from './pages/Settings'
 import { useAutoBackup } from './lib/autoBackup'
 import { useCategorySync } from './lib/categories'
+import {
+  AUTH_CHANGED,
+  applyAuthRedirect,
+  initAuth,
+  isLoggedIn,
+  openAuth,
+  takeAuthRedirect,
+} from './lib/auth'
+import { maybeDailyCloudBackup } from './lib/cloudBackup'
 import { UpdateBanner } from './ui/UpdateBanner'
+import { AuthDialogs } from './ui/auth/AuthDialogs'
 
 const TITLES: Record<string, string> = {
   '/': 'nav.today',
@@ -66,10 +75,38 @@ function GlobalSearch() {
     }
   }, [])
 
-  const tasks = useLiveQuery(() => db.tasks.toArray(), [], [])
-  const projects = useLiveQuery(() => db.projects.toArray(), [], [])
-  const workers = useLiveQuery(() => db.workers.toArray(), [], [])
-  const transactions = useLiveQuery(() => db.transactions.toArray(), [], [])
+  const [data, setData] = useState<{
+    tasks: Task[]
+    projects: Project[]
+    workers: Worker[]
+    transactions: Transaction[]
+  } | null>(null)
+
+  // داده‌های جست‌وجو فقط وقتی مودال باز است خوانده می‌شوند (حافظه و زمان شروع اپ)
+  useEffect(() => {
+    if (!open) {
+      setData(null)
+      return
+    }
+    let cancelled = false
+    void (async () => {
+      const [tasks, projects, workers, transactions] = await Promise.all([
+        db.tasks.toArray(),
+        db.projects.toArray(),
+        db.workers.toArray(),
+        db.transactions.toArray(),
+      ])
+      if (!cancelled) setData({ tasks, projects, workers, transactions })
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
+  const tasks = data?.tasks ?? []
+  const projects = data?.projects ?? []
+  const workers = data?.workers ?? []
+  const transactions = data?.transactions ?? []
 
   function go(path: string) {
     setOpen(false)
@@ -194,6 +231,37 @@ function Shell() {
   useAutoBackup()
   useCategorySync()
 
+  /* نشست ذخیره‌شده + لینک تأیید ایمیل/بازیابی + بکاپ خودکار روزانهٔ ابری */
+  useEffect(() => {
+    let cancelled = false
+    void initAuth().then(async () => {
+      if (cancelled) return
+      const redirect = takeAuthRedirect()
+      if (redirect) {
+        if (redirect.error_description) {
+          openAuth('notice', false, 'auth.invalidLink')
+        } else {
+          try {
+            const kind = await applyAuthRedirect(redirect)
+            if (cancelled) return
+            openAuth(kind === 'recovery' ? 'new-password' : 'notice', false, kind === 'recovery' ? undefined : 'auth.emailConfirmed')
+          } catch {
+            if (!cancelled) openAuth('notice', false, 'auth.invalidLink')
+          }
+        }
+      }
+      if (!cancelled && isLoggedIn()) void maybeDailyCloudBackup()
+    })
+    const onAuth = () => {
+      if (isLoggedIn()) void maybeDailyCloudBackup()
+    }
+    window.addEventListener(AUTH_CHANGED, onAuth)
+    return () => {
+      cancelled = true
+      window.removeEventListener(AUTH_CHANGED, onAuth)
+    }
+  }, [])
+
   /* دکمه Back سخت‌افزاری اندروید — فقط در اپ نیتیو */
   useEffect(() => {
     let cleanup: (() => void) | undefined
@@ -263,6 +331,7 @@ function Shell() {
       </div>
 
       <GlobalSearch />
+      <AuthDialogs />
       <UpdateBanner />
     </div>
   )

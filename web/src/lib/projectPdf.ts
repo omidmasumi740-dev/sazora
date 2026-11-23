@@ -13,6 +13,7 @@ import type {
   Measurement,
 } from '../db/schema'
 import { groupDigits, tomanShort, faDigits, groupDecimal, downloadJSON } from './format'
+import { requireLogin } from './auth'
 
 /* ============================================================
    خروجی گزارش پروژه — PDF / JPG / Word / Excel / JSON / Visio
@@ -527,6 +528,7 @@ export async function downloadProjectReport(
   opt: ExportOptions = ALL_SECTIONS,
   format: ProjectExportFormat = 'pdf',
 ): Promise<void> {
+  if (!requireLogin()) return
   const { project, photos = [] } = data
   const base = `project-${project.id ?? 'x'}-${project.name.replace(/\s+/g, '_')}`
 

@@ -1,6 +1,6 @@
-; SAZORA Desktop v1.9.14 - Installer (Inno Setup 7)
+; SAZORA Desktop v1.9.22 - Installer (Inno Setup 7)
 #define MyAppName "SAZORA"
-#define MyAppVersion "1.9.14"
+#define MyAppVersion "1.9.22"
 #define MyAppExeName "SAZORA.exe"
 
 [Setup]
@@ -15,7 +15,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=installer
-OutputBaseFilename=SAZORA_1.9.14_Setup
+OutputBaseFilename=SAZORA_1.9.22_Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -40,7 +40,7 @@ Source: "app\*"; DestDir: "{app}\app"; Flags: ignoreversion recursesubdirs creat
 Source: "SAZORA.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "app.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README-DESKTOP.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "SAZORA-ROADMAP-v1.9.14.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "SAZORA-ROADMAP-v1.9.22.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Microsoft.Web.WebView2.Core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Microsoft.Web.WebView2.WinForms.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "WebView2Loader.dll"; DestDir: "{app}"; Flags: ignoreversion

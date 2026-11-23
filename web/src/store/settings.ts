@@ -71,6 +71,9 @@ interface Settings {
   setAutoUpdate: (v: boolean) => void
   setBackupDir: (p: string) => void
   setUpdateDir: (p: string) => void
+  /** بکاپ خودکار ابری — پیش‌فرض خاموش */
+  autoCloudBackup: boolean
+  setAutoCloudBackup: (v: boolean) => void
 }
 
 export const useSettings = create<Settings>()(
@@ -88,6 +91,7 @@ export const useSettings = create<Settings>()(
       autoUpdate: true,
       backupDir: '',
       updateDir: '',
+      autoCloudBackup: false,
 
       setLang: (lang) => {
         set({ lang })
@@ -124,6 +128,7 @@ export const useSettings = create<Settings>()(
       setAutoUpdate: (autoUpdate) => set({ autoUpdate }),
       setBackupDir: (backupDir) => set({ backupDir }),
       setUpdateDir: (updateDir) => set({ updateDir }),
+      setAutoCloudBackup: (autoCloudBackup) => set({ autoCloudBackup }),
     }),
     {
       name: 'sazora-settings',

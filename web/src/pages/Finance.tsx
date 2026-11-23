@@ -94,6 +94,8 @@ function useBudgets() {
   return { budgets, setBudget, removeBudget, renameBudget }
 }
 
+let mirrorRunning = false
+
 export default function FinancePage() {
   const { t } = useTranslation()
   const txCats = useTxCats()
@@ -101,17 +103,26 @@ export default function FinancePage() {
 
   // بک‌فیل یک‌باره: آینه تراکنش‌های پروژه برای ورودی‌های قدیمی دفتر پروژه
   useEffect(() => {
-    async function backfill() {
+    const KEY = 'sazora-mirror-v1'
+    if (localStorage.getItem(KEY) || mirrorRunning) return
+    mirrorRunning = true
+    void (async () => {
       try {
-        if (localStorage.getItem('sazora-mirror-v1')) return
         const entries = await db.financeEntries.toArray()
+        if (entries.length === 0) return
         const txs = await db.transactions.toArray()
+        const seen = new Set<string>()
+        for (const x of txs) {
+          const note = x.note ?? ''
+          const at = note.indexOf('[projEntry:')
+          if (at < 0) continue
+          const end = note.indexOf(']', at + 11)
+          if (end > 0) seen.add(note.slice(at + 11, end))
+        }
+        const rows: Array<Omit<Transaction, 'id'>> = []
         for (const e of entries) {
-          if (e.id == null) continue
-          const tag = `[projEntry:${e.id}]`
-          const exists = txs.some((x) => (x.note ?? '').includes(tag))
-          if (exists) continue
-          await db.transactions.add({
+          if (e.id == null || seen.has(String(e.id))) continue
+          rows.push({
             type: e.type === 'income' ? 'income' : 'expense',
             category: e.category,
             amount: e.amount,
@@ -120,16 +131,22 @@ export default function FinancePage() {
             createdAt: Date.now(),
           })
         }
+        if (rows.length) {
+          await db.transaction('rw', db.transactions, async () => {
+            await db.transactions.bulkAdd(rows)
+          })
+        }
+        try {
+          localStorage.setItem(KEY, '1')
+        } catch {
+          /* ignore */
+        }
       } catch {
         /* ignore */
+      } finally {
+        mirrorRunning = false
       }
-      try {
-        localStorage.setItem('sazora-mirror-v1', '1')
-      } catch {
-        /* ignore */
-      }
-    }
-    void backfill()
+    })()
   }, [])
 
   return (
@@ -456,7 +473,6 @@ function BudgetBox({
 function SpendingCharts() {
   const { t, i18n } = useTranslation()
   const lang = (i18n.language === 'en' ? 'en' : 'fa') as 'fa' | 'en'
-  const allTx = useLiveQuery(() => db.transactions.orderBy('createdAt').toArray(), [], [] as Transaction[])
   const today = todayJalali()
   /** پاپ‌آپ ریزتراکنش‌های یک دسته یا یک ماه */
   const [drill, setDrill] = useState<{
@@ -477,6 +493,21 @@ function SpendingCharts() {
     }
     return arr
   }, [today])
+
+  const year = today.slice(0, 4)
+  const yStart = `${year}-01-01`
+  const yEnd = `${year}-12-31`
+  const mStart = startOfMonth(today)
+  const mEnd = endOfMonth(today)
+  const rangeFrom = months[0].start < yStart ? months[0].start : yStart
+  const rangeTo = months[months.length - 1].end > yEnd ? months[months.length - 1].end : yEnd
+
+  // فقط بازهٔ لازم (۶ ماه اخیر + سال جاری) خوانده می‌شود، نه کل تاریخچه
+  const allTx = useLiveQuery(
+    () => db.transactions.where('date').between(rangeFrom, rangeTo, true, true).toArray(),
+    [rangeFrom, rangeTo],
+    [] as Transaction[],
+  )
 
   const monthTotals = useMemo(
     () =>
@@ -503,12 +534,6 @@ function SpendingCharts() {
     { key: 'income' as const, label: t('finance.seriesIncome'), color: 'var(--b-green)' },
     { key: 'invest' as const, label: t('finance.seriesInvest'), color: 'var(--b-accent)' },
   ]
-
-  const year = today.slice(0, 4)
-  const yStart = `${year}-01-01`
-  const yEnd = `${year}-12-31`
-  const mStart = startOfMonth(today)
-  const mEnd = endOfMonth(today)
 
   const isOut = (t: Transaction['type']) => t === 'expense' || t === 'invest'
 

@@ -436,15 +436,17 @@ function TaskGroup(props: {
 }) {
   const { t } = useTranslation()
   const { tasks } = props
+  const [shown, setShown] = useState(120)
+  const visibleTasks = tasks.length > shown ? tasks.slice(0, shown) : tasks
 
   const subs = useLiveQuery(
     async () => {
-      const ids = tasks.map((x) => x.id!).filter(Boolean)
+      const ids = visibleTasks.map((x) => x.id!).filter(Boolean)
       if (!ids.length) return [] as Task[]
       const all = await db.tasks.where('parentId').anyOf(ids).toArray()
       return all
     },
-    [tasks.map((x) => x.id).join(',')],
+    [visibleTasks.map((x) => x.id).join(',')],
     [] as Task[],
   )
 
@@ -458,7 +460,7 @@ function TaskGroup(props: {
         <span className="text-[11px] text-faint">· {faDigits(tasks.length)} مورد</span>
       </div>
 
-      {tasks.map((task) => {
+      {visibleTasks.map((task) => {
         const isDone = task.status === 'done'
         const open = props.expanded === task.id
         const mySubs = (subs ?? []).filter((s) => s.parentId === task.id)
@@ -574,6 +576,14 @@ function TaskGroup(props: {
           </div>
         )
       })}
+
+      {tasks.length > visibleTasks.length && (
+        <div className="p-3 border-t border-line text-center">
+          <button className="btn" onClick={() => setShown((n) => n + 300)}>
+            {t('today.showMore', { n: faDigits(tasks.length - visibleTasks.length) })}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

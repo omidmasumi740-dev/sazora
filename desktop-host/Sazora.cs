@@ -588,6 +588,58 @@ namespace SAZORA
                         { "action", "file-saved" }, { "ok", true }, { "path", path }
                     });
                 }
+                else if (action == "save-secret" || action == "load-secret" || action == "delete-secret")
+                {
+                    string key = dict.ContainsKey("key") ? Convert.ToString(dict["key"]) : "";
+                    string file = SecretFile(key);
+                    if (action == "save-secret")
+                    {
+                        bool ok = false;
+                        try
+                        {
+                            string value = dict.ContainsKey("value") ? Convert.ToString(dict["value"]) : "";
+                            byte[] data = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), SecretEntropy(), DataProtectionScope.CurrentUser);
+                            File.WriteAllBytes(file, data);
+                            ok = true;
+                        }
+                        catch { }
+                        Post(new Dictionary<string, object> {
+                            { "action", "secret-saved" }, { "ok", ok }
+                        });
+                    }
+                    else if (action == "load-secret")
+                    {
+                        string value = "";
+                        try
+                        {
+                            if (File.Exists(file))
+                            {
+                                byte[] data = ProtectedData.Unprotect(File.ReadAllBytes(file), SecretEntropy(), DataProtectionScope.CurrentUser);
+                                value = Encoding.UTF8.GetString(data);
+                            }
+                        }
+                        catch { }
+                        Post(new Dictionary<string, object> {
+                            { "action", "secret" }, { "key", key }, { "value", value }
+                        });
+                    }
+                    else
+                    {
+                        bool ok = true;
+                        try { if (File.Exists(file)) File.Delete(file); } catch { ok = false; }
+                        Post(new Dictionary<string, object> {
+                            { "action", "secret-deleted" }, { "ok", ok }
+                        });
+                    }
+                }
+                else if (action == "get-device-name")
+                {
+                    string name = "";
+                    try { name = Environment.MachineName; } catch { }
+                    Post(new Dictionary<string, object> {
+                        { "action", "device-name" }, { "name", name }
+                    });
+                }
                 else if (action == "install-update")
                 {
                     string b64 = Convert.ToString(dict["zip"]);
@@ -613,6 +665,31 @@ namespace SAZORA
                     { "action", "host-error" }, { "message", ex.Message }
                 });
             }
+        }
+
+        /* ---------- ذخیرهٔ امن نشست با DPAPI (فقط برای همین کاربر ویندوز) ---------- */
+
+        static byte[] SecretEntropy()
+        {
+            return Encoding.UTF8.GetBytes("SAZORA.Secrets.v1");
+        }
+
+        static string SecretFile(string key)
+        {
+            string dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "SAZORA",
+                "secrets");
+            Directory.CreateDirectory(dir);
+            string safe = "secret";
+            if (!string.IsNullOrEmpty(key))
+            {
+                var sb = new StringBuilder();
+                foreach (char c in key)
+                    if (char.IsLetterOrDigit(c) || c == '-' || c == '_') sb.Append(c);
+                if (sb.Length > 0) safe = sb.ToString();
+            }
+            return Path.Combine(dir, safe + ".bin");
         }
 
         /** اجرای اسکریپت به‌روزرسانی: صبر تا بستن اپ، استخراج ZIP، اجرای مجدد */

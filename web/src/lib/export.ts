@@ -5,6 +5,7 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
+import { requireLogin } from './auth'
 
 /** دریافت المان DOM برای پردازش */
 function getElement(id: string): HTMLElement | null {
@@ -44,6 +45,7 @@ function imageRects(el: HTMLElement, canvas: HTMLCanvasElement): { top: number; 
  * خروجی PDF — صفحه‌بندی هوشمند (هیچ عکسی از وسط بریده نمی‌شود)
  */
 export async function exportPDF(elementId: string, filename: string): Promise<void> {
+  if (!requireLogin()) return
   const element = getElement(elementId)
   if (!element) return
   const canvas = await capture(element)
@@ -89,6 +91,7 @@ export async function exportPDF(elementId: string, filename: string): Promise<vo
  * خروجی JPG — عکس کامل و بزرگ از المان
  */
 export async function exportJPG(elementId: string, filename: string): Promise<void> {
+  if (!requireLogin()) return
   const element = getElement(elementId)
   if (!element) return
   const canvas = await capture(element)
@@ -106,6 +109,7 @@ export function exportExcel(
   filename: string,
   sheetName = 'Sheet1',
 ): void {
+  if (!requireLogin()) return
   const ws = XLSX.utils.json_to_sheet(data)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 30))
@@ -116,6 +120,7 @@ export function exportExcel(
  * خروجی Word — HTML wrapped در doc
  */
 export function exportWord(elementId: string, filename: string): void {
+  if (!requireLogin()) return
   const element = getElement(elementId)
   if (!element) return
   const html = element.innerHTML
@@ -144,6 +149,7 @@ export function exportWord(elementId: string, filename: string): void {
 
 /** خروجی JSON */
 export function exportJSON(data: unknown, filename: string): void {
+  if (!requireLogin()) return
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   saveAs(blob, filename)
 }
@@ -164,6 +170,7 @@ export async function exportElement({
   data?: Record<string, unknown>[]
   sheetName?: string
 }): Promise<void> {
+  if (!requireLogin()) return
   switch (format) {
     case 'pdf':
       await exportPDF(elementId, filename)

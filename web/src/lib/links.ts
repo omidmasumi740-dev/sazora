@@ -1,0 +1,5 @@
+export const SUPPORT_EMAIL = 'sazorasupport@gmail.com'
+export const SITE_URL = 'https://sazora-site.pages.dev/'
+export const GITHUB_URL = 'https://github.com/omidmasumi740-dev'
+export const REPO_URL = 'https://github.com/omidmasumi740-dev/sazora'
+export const DONATE_URL = 'https://omidmasumi740-dev.github.io/donate-page/'

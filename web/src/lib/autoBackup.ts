@@ -45,16 +45,47 @@ function hasData(payload: { data: Record<string, unknown[]> }): boolean {
   return Object.values(payload.data).some((rows) => Array.isArray(rows) && rows.length > 0)
 }
 
+/** فشرده‌سازی gzip برای نسخهٔ داخلی — در مرورگرهای بدون پشتیبانی، null برمی‌گرداند */
+async function gzipJson(json: string): Promise<Blob | null> {
+  try {
+    if (typeof CompressionStream === 'undefined') return null
+    const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))
+    return await new Response(stream).blob()
+  } catch {
+    return null
+  }
+}
+
+/** خواندن متن کامل یک نسخه — هم فرمت فشردهٔ جدید و هم نسخه‌های قدیمی JSON */
+export async function snapshotText(row: AutoBackup): Promise<string> {
+  if (typeof row.json === 'string') return row.json
+  if (!row.blob) throw new Error('snapshot-empty')
+  if (typeof DecompressionStream === 'undefined') throw new Error('snapshot-unsupported')
+  const stream = row.blob.stream().pipeThrough(new DecompressionStream('gzip'))
+  return await new Response(stream).text()
+}
+
+/** یک نسخهٔ محلی اضافه می‌کند — برای بکاپ خودکار و نسخهٔ ایمنی قبل از بازیابی */
+export async function addLocalSnapshot(at: number, json: string): Promise<number> {
+  const blob = await gzipJson(json)
+  if (blob) {
+    await db.autoBackups.add({ at, blob, format: 'gzip-json', bytes: blob.size })
+    return blob.size
+  }
+  await db.autoBackups.add({ at, json })
+  return json.length
+}
+
 async function saveSnapshot(json: string): Promise<boolean> {
   const at = Date.now()
   try {
-    await db.autoBackups.add({ at, json })
+    await addLocalSnapshot(at, json)
   } catch {
     // فضای IndexedDB کم است — نسخه‌های قبلی را آزاد کن و یک‌بار دیگر تلاش کن
     try {
       const old = await db.autoBackups.toArray()
       for (const row of old) if (row.id != null) await db.autoBackups.delete(row.id)
-      await db.autoBackups.add({ at, json })
+      await addLocalSnapshot(at, json)
     } catch (err) {
       console.error('auto-backup snapshot failed:', err)
       return false
@@ -133,19 +164,23 @@ export function useAutoBackup(): void {
   }, [])
 }
 
-export interface SnapshotInfo extends AutoBackup {
+export interface SnapshotInfo {
   id: number
+  at: number
+  bytes: number
 }
 
-/** فهرست نسخه‌های پشتیبان داخل برنامه (جدیدترین اول) */
+/** فهرست نسخه‌های پشتیبان داخل برنامه (جدیدترین اول) — فقط متادیتا، بدون بارگذاری محتوا */
 export async function listSnapshots(): Promise<SnapshotInfo[]> {
   const rows = await db.autoBackups.orderBy('at').reverse().toArray()
-  return rows.filter((r): r is SnapshotInfo => typeof r.id === 'number')
+  return rows
+    .filter((r): r is AutoBackup & { id: number } => typeof r.id === 'number')
+    .map((r) => ({ id: r.id, at: r.at, bytes: r.bytes ?? r.json?.length ?? 0 }))
 }
 
 /** بازیابی یک نسخه — ادغام با داده‌های فعلی (هیچ داده‌ای پاک نمی‌شود) */
 export async function restoreSnapshot(id: number) {
   const row = await db.autoBackups.get(id)
   if (!row) throw new Error('snapshot-missing')
-  return importAll(JSON.parse(row.json))
+  return importAll(JSON.parse(await snapshotText(row)))
 }

@@ -1575,7 +1575,7 @@ html[dir='rtl'] .app-window-sm,
   .page-actions .btn { flex: 1 1 100%; }
 }
 
-/* 1.9.18 hardening: free line, side features, gallery, account, verify */
+/* 1.9.22 hardening: free line, side features, gallery, account, verify */
 [hidden] {
   display: none !important;
 }

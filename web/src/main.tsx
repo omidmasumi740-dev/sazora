@@ -5,6 +5,10 @@ import './styles/index.css'
 import './styles/reader.css'
 import App from './App'
 import { initSettings } from './store/settings'
+import { captureAuthRedirect } from './lib/auth'
+
+/* لینک تأیید ایمیل/بازیابی رمز (Supabase) قبل از مسیریابی خوانده می‌شود */
+captureAuthRedirect()
 
 /* تنظیمات کاربر از localStorage خونده و اعمال می‌شه */
 initSettings()

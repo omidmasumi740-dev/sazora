@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { createPortal } from 'react-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { openAuth, signOut, useAuth } from '../lib/auth'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useSettings, ACCENTS, type AccentId, type MenuKey } from '../store/settings'
-import { db, exportAll, importAll, wipeAll } from '../db/schema'
+import { exportAll, importAll, wipeAll } from '../db/schema'
 import { seed } from '../db/seed'
 import { downloadJSON, faDigits } from '../lib/format'
+import { CloudBackupPanel } from '../ui/CloudBackupPanel'
+import { CloudError, cloudBackup, lastCloudBackupAt } from '../lib/cloudBackup'
+import { DONATE_URL, GITHUB_URL, SITE_URL, SUPPORT_EMAIL } from '../lib/links'
 import {
   APP_VERSION,
   checkForUpdates,
@@ -26,7 +32,7 @@ import {
   type SnapshotInfo,
 } from '../lib/autoBackup'
 import { compressImage } from '../lib/photos'
-import { todayJalali, formatJalali, toJalali } from '../lib/jalali'
+import { formatJalali, toJalali } from '../lib/jalali'
 import { Panel, Field, TextInput } from '../ui/components'
 import { loadRateList, saveRateList, resetRateList, type RatePreset } from '../lib/ratePresets'
 import { UNITS } from '../lib/rates'
@@ -56,7 +62,6 @@ export function setProfilePhoto(dataUrl: string | null): void {
   window.dispatchEvent(new CustomEvent(PROFILE_EVENT))
 }
 
-const BACKUP_EMAIL_KEY = 'sazora-backup-email'
 const MENU_KEYS: MenuKey[] = ['today', 'inbox', 'projects', 'workers', 'finance', 'goals', 'learn', 'club', 'board']
 
 /* وضعیت حافظه: ماندگار شده؟ چقدر مصرف شده؟ */
@@ -89,14 +94,6 @@ export function useStorageStatus() {
   return { ...st, refresh }
 }
 
-function readBackupEmail(): string {
-  try {
-    return localStorage.getItem(BACKUP_EMAIL_KEY) ?? ''
-  } catch {
-    return ''
-  }
-}
-
 function readAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader()
@@ -117,24 +114,78 @@ function formatWhen(at: number): string {
   }
 }
 
-type Tab = 'storage' | 'backup' | 'update' | 'data'
+function formatWhenParts(at: number): { date: string; time: string } {
+  const d = new Date(at)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  const time = `${faDigits(hh)}:${faDigits(mm)}`
+  try {
+    return { date: faDigits(formatJalali(toJalali(d))), time }
+  } catch {
+    return { date: '', time }
+  }
+}
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'storage', label: 'حافظه' },
-  { id: 'backup', label: 'بکاپ و بازیابی' },
-  { id: 'update', label: 'به‌روزرسانی' },
-  { id: 'data', label: 'مدیریت داده' },
-]
+const FILE_BACKUP_KEY = 'sazora-last-file-backup-at'
+const BACKUP_STALE_MS = 7 * 24 * 60 * 60 * 1000
+
+function readLastFileBackup(): number {
+  try {
+    const n = Number(localStorage.getItem(FILE_BACKUP_KEY))
+    return Number.isFinite(n) && n > 0 ? n : 0
+  } catch {
+    return 0
+  }
+}
+
+export function markFileBackup(at: number): void {
+  try {
+    localStorage.setItem(FILE_BACKUP_KEY, String(at))
+  } catch {
+    /* حافظه غیرفعال — نادیده بگیر */
+  }
+}
+
+type BackupDialog = 'save' | 'restore' | null
+type RestoreSource = 'file' | 'auto' | 'cloud'
 
 export default function SettingsPage() {
   const { t } = useTranslation()
   const s = useSettings()
+  const { user, loggedIn } = useAuth()
   const fileRef = useRef<HTMLInputElement>(null)
   const photoRef = useRef<HTMLInputElement>(null)
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [photo, setPhoto] = useState<string | null>(() => getProfilePhoto())
-  const [backupEmail, setBackupEmail] = useState<string>(() => readBackupEmail())
-  const [tab, setTab] = useState<Tab>('storage')
+  const [dialog, setDialog] = useState<BackupDialog>(null)
+  const [restoreSource, setRestoreSource] = useState<RestoreSource>('file')
+  const [cloudBusy, setCloudBusy] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [updateOpen, setUpdateOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [lastFileBackup, setLastFileBackup] = useState<number>(() => readLastFileBackup())
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+  const [searchParams] = useSearchParams()
+  useEffect(() => {
+    // لینک «بکاپ ابری» در نوار کنار → پنجرهٔ بازیابی روی بخش ابری
+    if (searchParams.get('tab') === 'cloud') {
+      openBackupDialog('restore', 'cloud')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!dialog) return
+    const prev = returnFocusRef.current
+    const id = requestAnimationFrame(() => {
+      dialogRef.current?.querySelector<HTMLElement>('[data-dialog-autofocus]')?.focus()
+    })
+    return () => {
+      cancelAnimationFrame(id)
+      prev?.focus?.()
+    }
+  }, [dialog])
   const storage = useStorageStatus()
   const [auto, setAuto] = useState<AutoSaveStatus>(() => readAutoSaveStatus())
   const snapshots = useLiveQuery(() => listSnapshots(), []) ?? []
@@ -174,6 +225,43 @@ export default function SettingsPage() {
     setTimeout(() => setMsg(null), 3500)
   }
 
+  function openBackupDialog(kind: Exclude<BackupDialog, null>, source?: RestoreSource) {
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    if (source) setRestoreSource(source)
+    setDialog(kind)
+  }
+
+  function closeDialog() {
+    if (cloudBusy) return
+    setDialog(null)
+  }
+
+  function onDialogKeyDown(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      closeDialog()
+      return
+    }
+    if (e.key !== 'Tab') return
+    const root = dialogRef.current
+    if (!root) return
+    const focusables = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => el.offsetParent !== null)
+    if (focusables.length === 0) return
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
+
   /* ---------- بکاپ و بازیابی ---------- */
   async function doExport() {
     const data = await exportAll()
@@ -181,11 +269,17 @@ export default function SettingsPage() {
     if (s.backupDir && hasDesktopBridge()) {
       const res = await saveFileToFolder(name, JSON.stringify(data, null, 2), s.backupDir)
       if (res.ok) {
+        const at = Date.now()
+        markFileBackup(at)
+        setLastFileBackup(at)
         toast('ok', `بکاپ در ${res.path ?? s.backupDir} ذخیره شد.`)
         return
       }
     }
     await downloadJSON(data, name)
+    const at = Date.now()
+    markFileBackup(at)
+    setLastFileBackup(at)
     toast('ok', t('settings.exportSuccess'))
   }
 
@@ -300,21 +394,36 @@ export default function SettingsPage() {
     setTimeout(() => window.location.reload(), 600)
   }
 
-  async function doMailBackup() {
-    const email = backupEmail.trim()
-    if (!email) {
-      toast('err', 'اول ایمیل بکاپ را وارد کن')
+  async function doCloudSave() {
+    if (!loggedIn) {
+      openAuth('login')
       return
     }
-    const [projectCount, txCount] = await Promise.all([db.projects.count(), db.transactions.count()]).catch(
-      () => [0, 0] as [number, number],
-    )
-    const today = todayJalali()
-    const subject = encodeURIComponent(`بکاپ سازورا — ${today}`)
-    const body = encodeURIComponent(
-      `خلاصه وضعیت سازورا\nتعداد پروژه‌ها: ${projectCount}\nتعداد تراکنش‌ها: ${txCount}\nتاریخ: ${today}\n\nفایل بکاپ را از بخش «دانلود بکاپ» بگیر و به همین ایمیل ضمیمه کن.`,
-    )
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`
+    if (cloudBusy) return
+    setCloudBusy(true)
+    try {
+      await cloudBackup.backup_now()
+      toast('ok', t('cloud.doneBackup'))
+      setDialog(null)
+    } catch (err) {
+      const code = err instanceof CloudError ? err.code : 'unknown'
+      if (code === 'login_required' || code === 'session_expired') {
+        openAuth('login')
+        toast('err', t('auth.err_session_expired'))
+      } else if (code === 'offline') {
+        toast('err', t('auth.err_offline'))
+      } else if (code === 'timeout') {
+        toast('err', t('auth.err_timeout'))
+      } else if (code === 'too_large') {
+        toast('err', t('cloud.tooLarge'))
+      } else if (code === 'storage_full') {
+        toast('err', t('cloud.storageFull'))
+      } else {
+        toast('err', t('auth.err_unknown'))
+      }
+    } finally {
+      setCloudBusy(false)
+    }
   }
 
   async function requestPersist() {
@@ -352,15 +461,6 @@ export default function SettingsPage() {
   function doPhotoRemove() {
     setProfilePhoto(null)
     setPhoto(null)
-  }
-
-  function doBackupEmailChange(v: string) {
-    setBackupEmail(v)
-    try {
-      localStorage.setItem(BACKUP_EMAIL_KEY, v)
-    } catch {
-      /* ignore */
-    }
   }
 
   /* ---------- لیست کارها (قلم نرخ) ---------- */
@@ -412,6 +512,12 @@ export default function SettingsPage() {
   }
 
   const hiddenCount = menuOrder.filter((k) => s.hiddenMenus.includes(k)).length
+
+  const lastCloud = lastCloudBackupAt() ?? 0
+  const latestBackup = Math.max(lastFileBackup, lastCloud, auto.at ?? 0)
+  const backupAgeDays = latestBackup ? Math.floor((Date.now() - latestBackup) / 86400000) : 0
+  const backupStale = latestBackup > 0 && Date.now() - latestBackup > BACKUP_STALE_MS
+  const backupParts = latestBackup ? formatWhenParts(latestBackup) : null
 
   return (
     <div className="b-view max-w-4xl mx-auto">
@@ -720,193 +826,187 @@ export default function SettingsPage() {
         </Panel>
       </div>
 
-      {/* داده، بکاپ و به‌روزرسانی — یک پنل با تب‌های فشرده */}
+      {/* امنیت داده‌ها — وضعیت بکاپ */}
       <Panel className="mb-4">
-        <b className="text-[14px] block mb-3">🗄️ داده، بکاپ و به‌روزرسانی</b>
-
-        <div className="flex flex-wrap gap-1 mb-4 bg-surface-2 border border-line rounded-xl p-1">
-          {TABS.map((x) => (
-            <button
-              key={x.id}
-              type="button"
-              onClick={() => setTab(x.id)}
-              className={`flex-1 min-w-[88px] text-[12px] rounded-lg px-2 py-1.5 transition-colors ${
-                tab === x.id ? 'bg-surface font-semibold shadow-sm text-ink' : 'text-muted hover:text-ink'
-              }`}
-            >
-              {x.label}
-            </button>
-          ))}
-        </div>
-
-        {tab === 'storage' && (
-          <div>
-            <div className="grid sm:grid-cols-2 gap-3 mb-3">
-              <div className="rounded-xl border border-line bg-surface-2 p-3">
-                <div className="text-[11.5px] text-muted mb-1.5">وضعیت حافظه</div>
-                <div className="flex flex-wrap gap-1.5 text-[11.5px]">
-                  <span className="chip">
-                    ماندگار: {storage.persisted == null ? 'نامشخص' : storage.persisted ? '✓ فعال' : 'غیرفعال'}
-                  </span>
-                  <span className="chip">
-                    مصرف: {storage.usageMB == null ? '—' : `${faDigits(storage.usageMB)} مگابایت`}
-                    {storage.quotaMB != null ? ` از ${faDigits(storage.quotaMB)} مگابایت` : ''}
-                  </span>
-                </div>
-                {storage.persisted === false && (
-                  <button className="btn !py-1 !px-2.5 mt-2 text-[11.5px]" onClick={() => void requestPersist()}>
-                    فعال‌سازی حافظه ماندگار
-                  </button>
-                )}
-              </div>
-
-              <div className="rounded-xl border border-line bg-surface-2 p-3">
-                <div className="text-[11.5px] text-muted mb-1.5">ذخیرهٔ خودکار هر ۱ ساعت</div>
-                <div className="text-[12px]">
-                  {auto.at
-                    ? `${formatWhen(auto.at)} — ${auto.mode === 'file' ? 'در پوشهٔ بکاپ + داخل برنامه' : 'داخل برنامه'}`
-                    : 'هنوز ذخیره نشده'}
-                </div>
-                <button className="btn btn-primary !py-1 !px-2.5 mt-2 text-[11.5px]" onClick={() => void saveNow()}>
-                  ذخیرهٔ فوری
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap text-[12px]">
-              <span className="text-muted shrink-0">پوشهٔ بکاپ:</span>
-              <span dir="ltr" className="text-faint break-all flex-1 min-w-[160px]">
-                {s.backupDir || 'پوشهٔ دانلود پیش‌فرض / حافظهٔ برنامه'}
+        <b className="text-[14px] block mb-2">🔒 {t('backupUI.dataSafety')}</b>
+        {!latestBackup ? (
+          <div className="rounded-xl border border-amber-300/60 bg-surface-2 p-3">
+            <div className="flex items-start gap-2">
+              <span
+                className="w-6 h-6 rounded-full grid place-items-center text-white text-[13px] shrink-0"
+                style={{ background: '#b45309' }}
+                aria-hidden
+              >
+                !
               </span>
-              <button className="btn !py-1 !px-2.5 text-[11.5px]" onClick={() => void pickBackupFolder()}>
-                انتخاب پوشه
-              </button>
-              {s.backupDir && (
-                <button className="btn !py-1 !px-2.5 text-[11.5px]" onClick={() => s.setBackupDir('')}>
-                  پاک کردن
-                </button>
-              )}
-            </div>
-            {auto.path && (
-              <div className="text-[11px] text-faint mt-1 break-all" dir="ltr">
-                {auto.path}
+              <div className="min-w-0 flex-1">
+                <div className="text-[13px] font-semibold">{t('backupUI.noBackupYet')}</div>
+                <div className="text-[11.5px] text-muted mt-1 leading-relaxed">{t('backupUI.neverBackupHint')}</div>
               </div>
-            )}
-
-            <p className="text-[11.5px] text-faint mt-3 leading-relaxed">
-              هر تغییری (تسک، کارکرد، تراکنش…) بلافاصله در حافظهٔ همین مرورگر ذخیره می‌شود. علاوه بر آن،
-              تا وقتی اپ باز است، هر ساعت یک نسخهٔ پشتیبان داخل برنامه ساخته می‌شود (۵ نسخهٔ آخر برای
-              بازیابی). اگر پوشهٔ بکاپ انتخاب شده باشد، فایل{' '}
-              <b dir="ltr">sazora-auto-latest.json</b> هم در همان پوشه به‌روز می‌شود.
-            </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary w-full mt-3 min-h-[44px]"
+              onClick={() => openBackupDialog('save')}
+            >
+              {t('backupUI.backupNow')}
+            </button>
+          </div>
+        ) : backupStale ? (
+          <div className="rounded-xl border border-amber-300/60 bg-surface-2 p-3">
+            <div className="flex items-start gap-2">
+              <span
+                className="w-6 h-6 rounded-full grid place-items-center text-white text-[13px] shrink-0"
+                style={{ background: '#b45309' }}
+                aria-hidden
+              >
+                !
+              </span>
+              <div className="text-[13px] font-semibold leading-relaxed">
+                {t('backupUI.daysSince', { n: faDigits(backupAgeDays) })}
+              </div>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary w-full mt-3 min-h-[44px]"
+              onClick={() => openBackupDialog('save')}
+            >
+              {t('backupUI.backupNow')}
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 p-3">
+            <span
+              className="w-6 h-6 rounded-full grid place-items-center text-white text-[13px] shrink-0"
+              style={{ background: 'var(--b-green)' }}
+              aria-hidden
+            >
+              ✓
+            </span>
+            <span className="text-[12.5px] leading-relaxed">
+              {t('backupUI.lastBackupLine', { date: backupParts?.date ?? '', time: backupParts?.time ?? '' })}
+            </span>
           </div>
         )}
+      </Panel>
 
-        {tab === 'backup' && (
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <button className="btn btn-primary" onClick={() => void doExport()}>
-                ⬇ دانلود بکاپ (JSON)
-              </button>
-              <button className="btn" onClick={() => fileRef.current?.click()}>
-                🔀 بازیابی از فایل
-              </button>
-            </div>
+      {/* دو اقدام اصلی */}
+      <Panel className="mb-4">
+        <div className="grid sm:grid-cols-2 gap-2">
+          <button
+            type="button"
+            className="min-h-[64px] rounded-xl border border-line bg-surface-2 hover:border-ink/40 transition-colors p-3 flex items-start gap-2.5 text-start"
+            onClick={() => openBackupDialog('save')}
+          >
+            <span className="text-[18px] leading-none mt-0.5" aria-hidden>💾</span>
+            <span className="min-w-0">
+              <span className="text-[13.5px] font-semibold block">{t('backupUI.saveTitle')}</span>
+              <span className="text-[11px] text-faint block mt-1 leading-relaxed">{t('backupUI.saveSub')}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className="min-h-[64px] rounded-xl border border-line bg-surface-2 hover:border-ink/40 transition-colors p-3 flex items-start gap-2.5 text-start"
+            onClick={() => openBackupDialog('restore', 'file')}
+          >
+            <span className="text-[18px] leading-none mt-0.5" aria-hidden>♻️</span>
+            <span className="min-w-0">
+              <span className="text-[13.5px] font-semibold block">{t('backupUI.restoreTitle')}</span>
+              <span className="text-[11px] text-faint block mt-1 leading-relaxed">{t('backupUI.restoreSub')}</span>
+            </span>
+          </button>
+        </div>
+      </Panel>
 
-            <div className="grid sm:grid-cols-[1fr_auto] gap-2 items-end mt-3">
-              <Field label="ایمیل بکاپ (اختیاری)">
-                <TextInput
-                  value={backupEmail}
-                  onChange={(e) => doBackupEmailChange(e.target.value)}
-                  placeholder="you@mail.com"
-                  dir="ltr"
-                />
-              </Field>
-              <button className="btn" onClick={() => void doMailBackup()}>
-                ارسال به ایمیل
-              </button>
-            </div>
-            <div className="text-[11px] text-faint mt-1">
-              مرورگر اجازهٔ ارسال خودکار ایمیل نمی‌دهد؛ فایل بکاپ را دانلود و به ایمیل ضمیمه کن.
-            </div>
-
-            <details className="mt-3 text-[12px] text-muted">
-              <summary className="cursor-pointer">ترفند: ذخیرهٔ خودکار بکاپ‌ها در OneDrive / Google Drive</summary>
-              <ol className="text-[11.5px] flex flex-col gap-1 list-decimal list-inside mt-2 leading-relaxed">
-                <li>OneDrive یا Google Drive را روی ویندوز نصب و وارد حساب شو.</li>
-                <li>
-                  در مرورگر: <b dir="ltr">Settings ← Downloads ← Change</b> و پوشهٔ ابری را انتخاب کن.
-                </li>
-                <li>گزینهٔ پرسیدن محل ذخیره را خاموش کن تا بکاپ بدون سؤال ذخیره شود.</li>
-              </ol>
-            </details>
-
-            <div className="mt-4 pt-4 border-t border-line">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <b className="text-[13px]">نسخه‌های ذخیرهٔ خودکار</b>
-                <span className="text-[11px] text-faint">{faDigits(snapshots.length)} از ۵</span>
-              </div>
-              {snapshots.length === 0 ? (
-                <div className="text-[12px] text-faint">هنوز نسخه‌ای ذخیره نشده است.</div>
-              ) : (
-                <div className="flex flex-col">
-                  {snapshots.map((sn) => (
-                    <div
-                      key={sn.id}
-                      className="flex items-center gap-2 py-1.5 border-b border-line last:border-0"
-                    >
-                      <span className="text-[12px] flex-1">{formatWhen(sn.at)}</span>
-                      <span className="text-[11px] text-faint">
-                        {faDigits(Math.max(1, Math.round(sn.json.length / 1024)))} KB
-                      </span>
-                      <button
-                        className="btn btn-ghost !py-0.5 !px-2 text-[11px]"
-                        onClick={() => void doRestoreSnapshot(sn)}
-                      >
-                        بازیابی
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="text-[11px] text-faint mt-2">
-                بازیابی، رکوردهای هم‌شناسه را به همین نسخه برمی‌گرداند؛ رکوردهای تازه‌تری که در نسخه
-                نیستند باقی می‌مانند.
-              </div>
-            </div>
-
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) void doImport(f)
-                e.target.value = ''
-              }}
-            />
-          </div>
-        )}
-
-        {tab === 'update' && (
-          <div>
-            <p className="text-[12px] text-muted mb-3">
-              نسخهٔ نصب‌شده: <b className="text-ink" dir="ltr">{APP_VERSION}</b> — بررسی آنلاین از
-              GitHub Releases یا نصب دستی از فایل ZIP. داده‌های شما دست‌نخورده می‌ماند.
-            </p>
-            <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">
+      {/* حساب و همگام‌سازی ابری */}
+      <Panel className="mb-4">
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <b className="text-[14px]">☁️ {t('backupUI.accountSyncTitle')}</b>
+          {user && (
+            <span className="chip chip-success ms-auto" dir="ltr">
+              {user.email}
+            </span>
+          )}
+        </div>
+        {user ? (
+          <>
+            <label className="flex items-start gap-2 mt-1 cursor-pointer select-none">
               <input
                 type="checkbox"
-                className="accent-current"
-                checked={s.autoUpdate}
-                onChange={(e) => s.setAutoUpdate(e.target.checked)}
+                className="accent-current mt-0.5"
+                checked={s.autoCloudBackup}
+                onChange={(e) => s.setAutoCloudBackup(e.target.checked)}
               />
-              <span className="text-[12.5px]">
-                {t('settings.autoUpdate')}
-                <span className="block text-[11px] text-faint">{t('settings.autoUpdateHint')}</span>
+              <span className="text-[12px]">
+                {t('cloud.autoDaily')}
+                <span className="block text-[11px] text-faint">{t('cloud.autoHint')}</span>
               </span>
             </label>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button
+                className="btn"
+                onClick={() => {
+                  if (window.confirm(`${t('auth.logout')}?`)) void signOut()
+                }}
+              >
+                {t('auth.logout')}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-[12px] text-muted leading-relaxed">{t('backupUI.cloudSyncPrompt')}</div>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button className="btn btn-primary" onClick={() => openAuth('login')}>
+                {t('auth.login')}
+              </button>
+            </div>
+            <div className="text-[11px] text-faint mt-2 leading-relaxed">{t('auth.guestHint')}</div>
+          </>
+        )}
+      </Panel>
+
+      {/* بیشتر — جمع‌شده و آرام */}
+      <Panel className="mb-4">
+        <button
+          type="button"
+          className="w-full flex items-center justify-between gap-2 text-start"
+          onClick={() => setMoreOpen((v) => !v)}
+          aria-expanded={moreOpen}
+        >
+          <span className="min-w-0">
+            <b className="text-[12.5px] font-medium text-muted block">{t('backupUI.more')}</b>
+            {!moreOpen && <span className="text-[11px] text-faint">{t('backupUI.moreHint')}</span>}
+          </span>
+          <span className="chip !py-0.5 !text-[11px] shrink-0">{moreOpen ? '▲ بستن' : '▼ باز کردن'}</span>
+        </button>
+
+        {moreOpen && (
+          <div className="mt-3 pt-3 border-t border-line">
+            {/* به‌روزرسانی */}
+            <div className="rounded-xl border border-line/70">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between gap-2 text-start p-3"
+                onClick={() => setUpdateOpen((v) => !v)}
+                aria-expanded={updateOpen}
+              >
+                <span className="min-w-0">
+                  <b className="text-[13px] block">⬆️ {t('backupUI.update')}</b>
+                  {!updateOpen && (
+                    <span className="text-[11px] text-faint block mt-0.5">
+                      {t('backupUI.versionLine', { v: APP_VERSION })} — برای بررسی نسخهٔ جدید باز کنید
+                    </span>
+                  )}
+                </span>
+                <span className="chip !py-0.5 !text-[11px] shrink-0">{updateOpen ? '▲ بستن' : '▼ باز کردن'}</span>
+              </button>
+
+              {updateOpen && (
+                <div className="px-3 pb-3 pt-3 border-t border-line">
+            <p className="text-[12px] text-muted mb-3">
+              نسخهٔ نصب‌شده: <b className="text-ink" dir="ltr">{APP_VERSION}</b> — داده‌های شما دست‌نخورده می‌ماند.
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 className="btn btn-primary"
@@ -978,37 +1078,333 @@ export default function SettingsPage() {
                 ? 'پس از انتخاب فایل یا پایان دانلود، اپ خودش بسته، به‌روزرسانی و دوباره باز می‌شود.'
                 : 'در نسخهٔ وب امکان جایگزینی خودکار وجود ندارد؛ فایل‌های نسخهٔ جدید را جایگزین کنید.'}
             </div>
-          </div>
-        )}
-
-        {tab === 'data' && (
-          <div>
-            <p className="text-[12px] text-muted mb-3">
-              برای بکاپ‌گیری و بازیابی به تب «بکاپ و بازیابی» برو. این تب برای پاک‌سازی و شروع تازه است.
-            </p>
-            <div className="flex flex-wrap items-center justify-between gap-3 py-2">
-              <div>
-                <div className="text-[13px] font-semibold" style={{ color: 'var(--b-red)' }}>
-                  پاک‌سازی کامل (شروع خالی)
                 </div>
-                <div className="text-[11.5px] text-faint">همهٔ داده‌ها برای همیشه پاک می‌شوند.</div>
-              </div>
-              <button className="btn btn-danger" onClick={() => void doWipe()}>
-                پاک‌سازی کامل
-              </button>
+              )}
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-t border-line">
-              <div>
-                <div className="text-[13px] font-semibold">بازگردانی دادهٔ نمونه</div>
-                <div className="text-[11.5px] text-faint">{t('settings.resetConfirm')}</div>
-              </div>
-              <button className="btn" onClick={() => void doReset()}>
-                بازگردانی نمونه
+
+            {/* تنظیمات پیشرفته */}
+            <div className="mt-2 rounded-xl border border-line/70">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between gap-2 text-start p-3"
+                onClick={() => setAdvancedOpen((v) => !v)}
+                aria-expanded={advancedOpen}
+              >
+                <span className="min-w-0">
+                  <b className="text-[13px] block">⚙️ {t('backupUI.advanced')}</b>
+                  {!advancedOpen && (
+                    <span className="text-[11px] text-faint block mt-0.5">حافظه، پوشهٔ بکاپ و پاک‌سازی داده</span>
+                  )}
+                </span>
+                <span className="chip !py-0.5 !text-[11px] shrink-0">{advancedOpen ? '▲ بستن' : '▼ باز کردن'}</span>
               </button>
+
+              {advancedOpen && (
+                <div className="px-3 pb-3 pt-3 border-t border-line">
+            <div className="flex flex-col gap-1 text-[11.5px] text-muted mb-3">
+              <span>
+                {t('backupUI.autoSaveInfo')}: {auto.at ? formatWhen(auto.at) : '—'}
+              </span>
+              <span>
+                {t('backupUI.snapshotsInfo')}: {faDigits(snapshots.length)} از ۵
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3 mb-3">
+              <div className="rounded-xl border border-line bg-surface-2 p-3">
+                <div className="text-[11.5px] text-muted mb-1.5">وضعیت حافظه</div>
+                <div className="flex flex-wrap gap-1.5 text-[11.5px]">
+                  <span className="chip">
+                    ماندگار: {storage.persisted == null ? 'نامشخص' : storage.persisted ? '✓ فعال' : 'غیرفعال'}
+                  </span>
+                  <span className="chip">
+                    مصرف: {storage.usageMB == null ? '—' : `${faDigits(storage.usageMB)} مگابایت`}
+                    {storage.quotaMB != null ? ` از ${faDigits(storage.quotaMB)} مگابایت` : ''}
+                  </span>
+                </div>
+                {storage.persisted === false && (
+                  <button className="btn !py-1 !px-2.5 mt-2 text-[11.5px]" onClick={() => void requestPersist()}>
+                    فعال‌سازی حافظه ماندگار
+                  </button>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-line bg-surface-2 p-3">
+                <div className="text-[11.5px] text-muted mb-1.5">ذخیرهٔ خودکار هر ۱ ساعت</div>
+                <div className="text-[12px]">
+                  {auto.at
+                    ? `${formatWhen(auto.at)} — ${auto.mode === 'file' ? 'در پوشهٔ بکاپ + داخل برنامه' : 'داخل برنامه'}`
+                    : 'هنوز ذخیره نشده'}
+                </div>
+                <button className="btn btn-primary !py-1 !px-2.5 mt-2 text-[11.5px]" onClick={() => void saveNow()}>
+                  ذخیرهٔ فوری
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap text-[12px]">
+              <span className="text-muted shrink-0">پوشهٔ بکاپ:</span>
+              <span dir="ltr" className="text-faint break-all flex-1 min-w-[160px]">
+                {s.backupDir || 'پوشهٔ دانلود پیش‌فرض / حافظهٔ برنامه'}
+              </span>
+              <button className="btn !py-1 !px-2.5 text-[11.5px]" onClick={() => void pickBackupFolder()}>
+                انتخاب پوشه
+              </button>
+              {s.backupDir && (
+                <button className="btn !py-1 !px-2.5 text-[11.5px]" onClick={() => s.setBackupDir('')}>
+                  پاک کردن
+                </button>
+              )}
+            </div>
+            {auto.path && (
+              <div className="text-[11px] text-faint mt-1 break-all" dir="ltr">
+                {auto.path}
+              </div>
+            )}
+
+            <p className="text-[11.5px] text-faint mt-3 leading-relaxed">
+              هر تغییری (تسک، کارکرد، تراکنش…) بلافاصله در حافظهٔ همین مرورگر ذخیره می‌شود. علاوه بر آن،
+              تا وقتی اپ باز است، هر ساعت یک نسخهٔ پشتیبان داخل برنامه ساخته می‌شود (۵ نسخهٔ آخر برای
+              بازیابی). اگر پوشهٔ بکاپ انتخاب شده باشد، فایل{' '}
+              <b dir="ltr">sazora-auto-latest.json</b> هم در همان پوشه به‌روز می‌شود.
+            </p>
+
+            <div className="mt-4 pt-4 border-t border-line">
+              <div className="flex flex-wrap items-center justify-between gap-3 py-2">
+                <div>
+                  <div className="text-[13px] font-semibold" style={{ color: 'var(--b-red)' }}>
+                    پاک‌سازی کامل (شروع خالی)
+                  </div>
+                  <div className="text-[11.5px] text-faint">همهٔ داده‌ها برای همیشه پاک می‌شوند.</div>
+                </div>
+                <button className="btn btn-danger" onClick={() => void doWipe()}>
+                  پاک‌سازی کامل
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-t border-line">
+                <div>
+                  <div className="text-[13px] font-semibold">بازگردانی دادهٔ نمونه</div>
+                  <div className="text-[11.5px] text-faint">{t('settings.resetConfirm')}</div>
+                </div>
+                <button className="btn" onClick={() => void doReset()}>
+                  بازگردانی نمونه
+                </button>
+              </div>
+            </div>
+                </div>
+              )}
             </div>
           </div>
         )}
       </Panel>
+
+      {/* پنجرهٔ ذخیره/بازیابی */}
+      {dialog && createPortal(
+        <div
+          className="fixed inset-0 z-[70] grid place-items-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="backup-dialog-title"
+          onKeyDown={onDialogKeyDown}
+        >
+          <div className="absolute inset-0 bg-black/45" onClick={closeDialog} />
+          <div
+            ref={dialogRef}
+            className="relative w-[min(560px,94vw)] max-h-[86vh] overflow-y-auto bg-surface border border-line rounded-2xl shadow-float p-5"
+          >
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <b id="backup-dialog-title" className="text-[15px]">
+                {dialog === 'save' ? t('backupUI.whereSave') : t('backupUI.whereRestore')}
+              </b>
+              <button
+                className="btn btn-ghost !py-1 !px-2"
+                onClick={closeDialog}
+                disabled={cloudBusy}
+                aria-label={t('backupUI.close')}
+              >
+                ✕
+              </button>
+            </div>
+
+            {dialog === 'save' ? (
+              <>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    data-dialog-autofocus
+                    className="min-h-[64px] rounded-xl border border-line bg-surface-2 hover:border-ink/40 transition-colors p-3 flex items-start gap-2.5 text-start"
+                    onClick={() => {
+                      setDialog(null)
+                      void doExport()
+                    }}
+                  >
+                    <span className="text-[18px] leading-none mt-0.5" aria-hidden>📁</span>
+                    <span className="min-w-0">
+                      <span className="text-[13px] font-semibold block">{t('backupUI.optDevice')}</span>
+                      <span className="text-[11px] text-faint block mt-1 leading-relaxed">{t('backupUI.optDeviceHint')}</span>
+                    </span>
+                  </button>
+                  {loggedIn ? (
+                    <button
+                      type="button"
+                      className="min-h-[64px] rounded-xl border border-line bg-surface-2 hover:border-ink/40 transition-colors p-3 flex items-start gap-2.5 text-start disabled:opacity-60"
+                      disabled={cloudBusy}
+                      onClick={() => void doCloudSave()}
+                    >
+                      <span className="text-[18px] leading-none mt-0.5" aria-hidden>☁</span>
+                      <span className="min-w-0">
+                        <span className="text-[13px] font-semibold block">
+                          {t('backupUI.optCloud')} {cloudBusy ? '— در حال ارسال…' : ''}
+                        </span>
+                        <span className="text-[11px] text-faint block mt-1 leading-relaxed">{t('backupUI.optCloudHint')}</span>
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="min-h-[64px] rounded-xl border border-line bg-surface-2 p-3 flex items-start gap-2.5 opacity-80">
+                      <span className="text-[18px] leading-none mt-0.5" aria-hidden>☁</span>
+                      <span className="min-w-0">
+                        <span className="text-[13px] font-semibold block">{t('backupUI.optCloud')}</span>
+                        <span className="text-[11px] text-faint block mt-1 leading-relaxed">{t('backupUI.loginToUse')}</span>
+                        <button
+                          type="button"
+                          className="btn !py-1 !px-3 mt-2 text-[11.5px]"
+                          onClick={() => openAuth('login')}
+                        >
+                          {t('auth.login')}
+                        </button>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="text-[11px] text-faint mt-3 leading-relaxed">🔐 {t('cloud.autoEncBody')}</div>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2 mb-3">
+                  {(['file', 'cloud', 'auto'] as const).map((id) => {
+                    const active = restoreSource === id
+                    const label =
+                      id === 'file'
+                        ? t('backupUI.optFile')
+                        : id === 'cloud'
+                          ? t('backupUI.optCloudRestore')
+                          : t('backupUI.optAuto')
+                    const icon = id === 'file' ? '📁' : id === 'cloud' ? '☁' : '🕒'
+                    if (id === 'cloud' && !loggedIn) {
+                      return (
+                        <div key={id} className="rounded-xl border border-line p-2.5 px-3">
+                          <div className="flex items-center gap-2 text-[12.5px] opacity-70">
+                            <span aria-hidden>{icon}</span> {label}
+                          </div>
+                          <div className="text-[11px] text-faint mt-1">{t('backupUI.loginToUse')}</div>
+                          <button
+                            type="button"
+                            className="btn !py-1 !px-3 mt-2 text-[11.5px]"
+                            onClick={() => openAuth('login')}
+                          >
+                            {t('auth.login')}
+                          </button>
+                        </div>
+                      )
+                    }
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        data-dialog-autofocus={id === 'file' ? true : undefined}
+                        aria-pressed={active}
+                        onClick={() => setRestoreSource(id)}
+                        className={`min-h-[44px] rounded-xl border p-2.5 px-3 flex items-center gap-2 text-[12.5px] text-start transition-colors ${
+                          active ? 'border-ink/50 bg-surface-2 font-semibold' : 'border-line hover:border-ink/30'
+                        }`}
+                      >
+                        <span aria-hidden>{icon}</span> {label}
+                        {id === 'auto' && (
+                          <span className="chip !py-0.5 !text-[11px] ms-auto">
+                            {t('backupUI.versionsCount', { n: faDigits(snapshots.length) })}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {restoreSource === 'file' && (
+                  <div>
+                    <div className="text-[11.5px] text-muted leading-relaxed mb-3">
+                      فایل بکاپ (JSON) را انتخاب کنید. رکوردهای هم‌شناسه به‌روزرسانی می‌شوند و رکوردهای قدیمی
+                      حذف نمی‌شوند.
+                    </div>
+                    <button className="btn btn-primary" onClick={() => fileRef.current?.click()}>
+                      📁 انتخاب فایل بکاپ
+                    </button>
+                  </div>
+                )}
+
+                {restoreSource === 'auto' && (
+                  <div>
+                    {snapshots.length === 0 ? (
+                      <div className="text-[12px] text-faint py-4 text-center">هنوز نسخه‌ای ذخیره نشده است.</div>
+                    ) : (
+                      <div className="flex flex-col">
+                        {snapshots.map((sn) => (
+                          <div
+                            key={sn.id}
+                            className="flex items-center gap-2 py-1.5 border-b border-line last:border-0"
+                          >
+                            <span className="text-[12px] flex-1">{formatWhen(sn.at)}</span>
+                            <span className="text-[11px] text-faint">
+                              {faDigits(Math.max(1, Math.round(sn.bytes / 1024)))} KB
+                            </span>
+                            <button
+                              className="btn btn-ghost !py-0.5 !px-2 text-[11px]"
+                              onClick={() => void doRestoreSnapshot(sn)}
+                            >
+                              بازیابی
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="text-[11px] text-faint mt-2 leading-relaxed">
+                      بازیابی، رکوردهای هم‌شناسه را به همین نسخه برمی‌گرداند؛ رکوردهای تازه‌تری که در نسخه
+                      نیستند باقی می‌مانند.
+                    </div>
+                  </div>
+                )}
+
+                {restoreSource === 'cloud' &&
+                  (loggedIn ? (
+                    <CloudBackupPanel embedded />
+                  ) : (
+                    <div className="rounded-xl border border-line bg-surface-2 p-3">
+                      <div className="text-[12px] text-muted leading-relaxed">{t('backupUI.loginToUse')}</div>
+                      <button
+                        type="button"
+                        className="btn btn-primary !py-1.5 !px-3 mt-2 text-[11.5px]"
+                        onClick={() => openAuth('login')}
+                      >
+                        {t('auth.login')}
+                      </button>
+                    </div>
+                  ))}
+              </>
+            )}
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0]
+          if (f) void doImport(f)
+          e.target.value = ''
+        }}
+      />
 
       {/* درباره */}
       <Panel>
@@ -1023,8 +1419,8 @@ export default function SettingsPage() {
         </div>
         <p className="text-[12.5px] text-muted leading-relaxed mb-3">
           {s.lang === 'fa'
-            ? 'سازورا دستیار آفلاین مدیریت کار، پروژه‌های ساختمانی، مالی و اهداف است — اطلاعاتت فقط روی دستگاه خودت می‌ماند. اگر برایت مفید بود، با حمایتت به بهتر شدنش کمک کن.'
-            : 'SAZORA is an offline assistant for tasks, construction projects, finance and goals — your data stays on your own device. If you find it useful, please support its development with a donation.'}
+            ? 'سازورا دستیار آفلاین مدیریت کار، پروژه‌های ساختمانی، مالی و اهداف است — داده‌ها به‌طور پیش‌فرض روی همین دستگاه ذخیره می‌شوند و می‌توانید در صورت تمایل، نسخهٔ رمزنگاری‌شده را در فضای ابری حساب خودتان نگه دارید. اگر برایت مفید بود، با حمایتت به بهتر شدنش کمک کن.'
+            : 'SAZORA is an offline assistant for tasks, construction projects, finance and goals — data is stored on your device by default, and you can optionally keep an encrypted copy in your cloud account. If you find it useful, please support its development with a donation.'}
         </p>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-[12.5px]">
           <span className="text-muted">
@@ -1036,51 +1432,54 @@ export default function SettingsPage() {
           </span>
           <span className="text-muted">
             {s.lang === 'fa' ? 'گیت‌هاب: ' : 'GitHub: '}
-            <a
-              className="text-ink underline"
-              href="https://github.com/omidmasumi740-dev"
-              target="_blank"
-              rel="noreferrer"
-              dir="ltr"
-            >
+            <a className="text-ink underline" href={GITHUB_URL} target="_blank" rel="noreferrer" dir="ltr">
               github.com/omidmasumi740-dev
             </a>
           </span>
           <span className="text-muted">
-            {s.lang === 'fa' ? 'وب‌سایت: ' : 'Website: '}
-            <a
-              className="text-ink underline"
-              href="https://sazora-site.pages.dev/"
-              target="_blank"
-              rel="noreferrer"
-              dir="ltr"
-            >
-              sazora-site.pages.dev
-            </a>
-          </span>
-          <span className="text-muted">
-            {t('settings.storage')}: <b className="text-ink">IndexedDB — {t('settings.storageHint')}</b>
+            {t('settings.storage')}: <b className="text-ink">IndexedDB</b> — {t('settings.storageHint')}
           </span>
           <span className="text-muted">
             تکنولوژی: <b className="text-ink">React + Vite + Tailwind + Dexie</b>
           </span>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <a
-            className="btn btn-primary"
-            href="https://omidmasumi740-dev.github.io/donate-page/"
-            target="_blank"
-            rel="noreferrer"
-          >
+
+        {/* ارتباط با ما */}
+        <div className="mt-4 pt-4 border-t border-line">
+          <b className="text-[13px] block mb-2">
+            📮 {s.lang === 'fa' ? 'ارتباط با ما' : 'Contact'}
+          </b>
+          <div className="flex flex-col gap-2 text-[12.5px]">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted">{s.lang === 'fa' ? 'ایمیل پشتیبانی:' : 'Support email:'}</span>
+              <a className="text-ink underline" href={`mailto:${SUPPORT_EMAIL}`} dir="ltr">
+                {SUPPORT_EMAIL}
+              </a>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted">{s.lang === 'fa' ? 'صفحهٔ رسمی:' : 'Official site:'}</span>
+              <a className="text-ink underline" href={SITE_URL} target="_blank" rel="noreferrer" dir="ltr">
+                {SITE_URL}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <a className="btn btn-primary" href={DONATE_URL} target="_blank" rel="noreferrer">
             ☕ {s.lang === 'fa' ? 'حمایت مالی (Donate)' : 'Donate'}
           </a>
-          <a className="btn" href="https://sazora-site.pages.dev/" target="_blank" rel="noreferrer">
-            🌐 {s.lang === 'fa' ? 'سایت رسمی' : 'Official site'}
-          </a>
-          <a className="btn" href="https://github.com/omidmasumi740-dev" target="_blank" rel="noreferrer">
-            ⬇ {s.lang === 'fa' ? 'اپدیت‌ها و نسخه‌های جدید در گیت‌هاب' : 'Updates & new versions on GitHub'}
-          </a>
+          <label className="btn cursor-pointer select-none" title={t('settings.autoUpdateHint')}>
+            <input
+              type="checkbox"
+              className="accent-current"
+              checked={s.autoUpdate}
+              onChange={(e) => s.setAutoUpdate(e.target.checked)}
+            />
+            {t('settings.autoUpdate')}
+          </label>
         </div>
+        <div className="text-[11px] text-faint mt-2">{t('settings.autoUpdateHint')}</div>
       </Panel>
 
       {msg && (

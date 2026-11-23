@@ -1,11 +1,15 @@
-import { NavLink } from 'react-router-dom'
-import { useEffect, useState, type ReactNode } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../db/schema'
+import { db, exportAll } from '../db/schema'
+import { downloadJSON } from '../lib/format'
+import { hasDesktopBridge, saveFileToFolder } from '../lib/updater'
+import { CloudError, cloudBackup } from '../lib/cloudBackup'
 import { Kbd } from './components'
 import { useSettings } from '../store/settings'
-import { PROFILE_EVENT, getProfilePhoto } from '../pages/Settings'
+import { PROFILE_EVENT, getProfilePhoto, markFileBackup } from '../pages/Settings'
+import { openAuth, useAuth } from '../lib/auth'
 
 /* ---------- آیکون‌ها ---------- */
 const I = {
@@ -66,6 +70,11 @@ const I = {
       <path d="M12 9.5l4.5 1.5L18 7.5" />
       <path d="M12 15l-3 6" />
       <path d="M12 15l3 6" />
+    </svg>
+  ),
+  cloud: (
+    <svg className="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M7 18h9a4 4 0 0 0 .5-7.97A6 6 0 0 0 5 9.5 4.25 4.25 0 0 0 7 18z" />
     </svg>
   ),
   settings: (
@@ -139,7 +148,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           )}
         </div>
         <span className="ms-auto text-[10px] text-faint bg-surface-2 border border-line rounded px-1.5">
-          v1.9.14
+          v1.9.22
         </span>
       </div>
 
@@ -187,8 +196,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      {/* تنظیمات */}
-      <div className="px-2.5 mt-5 mb-4">
+      {/* تنظیمات و ابر */}
+      <div className="px-2.5 mt-5 mb-4 flex flex-col gap-0.5">
         <NavLink
           to="/settings"
           onClick={onNavigate}
@@ -237,8 +246,95 @@ export function statusColor(status: string): string {
 /** نوار بالا — عنوان صفحه، تاریخ، تغییر تم و زبان */
 export function Topbar({ title, onOpenMenu }: { title: string; onOpenMenu?: () => void }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const settings = useSettings()
+  const { user, loggedIn } = useAuth()
   const [photo, setPhoto] = useState<string | null>(() => getProfilePhoto())
+  const [saveOpen, setSaveOpen] = useState(false)
+  const [saveBusy, setSaveBusy] = useState<'local' | 'cloud' | null>(null)
+  const [saveNote, setSaveNote] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+  const saveRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!saveOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (!saveRef.current?.contains(e.target as Node)) setSaveOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSaveOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [saveOpen])
+
+  useEffect(() => {
+    if (!saveNote) return
+    const id = setTimeout(() => setSaveNote(null), 4000)
+    return () => clearTimeout(id)
+  }, [saveNote])
+
+  async function quickLocalSave() {
+    if (saveBusy) return
+    setSaveBusy('local')
+    setSaveNote(null)
+    try {
+      const data = await exportAll()
+      const name = `sazora-backup-${new Date().toISOString().slice(0, 10)}.json`
+      let saved = false
+      if (settings.backupDir && hasDesktopBridge()) {
+        const res = await saveFileToFolder(name, JSON.stringify(data, null, 2), settings.backupDir)
+        saved = res.ok
+      }
+      if (!saved) await downloadJSON(data, name)
+      markFileBackup(Date.now())
+      setSaveNote({ kind: 'ok', text: t('quickSave.localDone') })
+      setSaveOpen(false)
+    } catch {
+      setSaveNote({ kind: 'err', text: t('quickSave.failed') })
+      setSaveOpen(false)
+    } finally {
+      setSaveBusy(null)
+    }
+  }
+
+  async function quickCloudSave() {
+    if (saveBusy) return
+    if (!loggedIn) {
+      setSaveOpen(false)
+      openAuth('login')
+      return
+    }
+    setSaveBusy('cloud')
+    setSaveNote(null)
+    try {
+      await cloudBackup.backup_now()
+      setSaveNote({ kind: 'ok', text: t('cloud.doneBackup') })
+      setSaveOpen(false)
+    } catch (err) {
+      const code = err instanceof CloudError ? err.code : 'unknown'
+      if (code === 'login_required' || code === 'session_expired') {
+        openAuth('login')
+        setSaveNote({ kind: 'err', text: t('auth.err_session_expired') })
+      } else if (code === 'offline') {
+        setSaveNote({ kind: 'err', text: t('auth.err_offline') })
+      } else if (code === 'timeout') {
+        setSaveNote({ kind: 'err', text: t('auth.err_timeout') })
+      } else if (code === 'too_large') {
+        setSaveNote({ kind: 'err', text: t('cloud.tooLarge') })
+      } else if (code === 'storage_full') {
+        setSaveNote({ kind: 'err', text: t('cloud.storageFull') })
+      } else {
+        setSaveNote({ kind: 'err', text: t('auth.err_unknown') })
+      }
+      setSaveOpen(false)
+    } finally {
+      setSaveBusy(null)
+    }
+  }
 
   useEffect(() => {
     const refresh = () => setPhoto(getProfilePhoto())
@@ -273,6 +369,81 @@ export function Topbar({ title, onOpenMenu }: { title: string; onOpenMenu?: () =
       </div>
 
       <div className="ms-auto flex items-center gap-2">
+        <button
+          className="hidden sm:flex items-center gap-1.5 bg-surface border border-line rounded-lg px-3 py-1.5 text-[12.5px] text-muted hover:border-faint transition-colors max-w-[190px]"
+          onClick={() => (user ? navigate('/settings?tab=cloud') : openAuth('login'))}
+          title={user?.email ?? t('auth.guest')}
+        >
+          <span className="text-[13px]">☁</span>
+          <span className="truncate" dir="ltr">
+            {user?.email ?? t('auth.login')}
+          </span>
+        </button>
+        <div ref={saveRef} className="relative hidden sm:block">
+          <button
+            className="flex items-center gap-1.5 bg-surface border border-line rounded-lg px-3 py-1.5 text-[12.5px] text-muted hover:border-faint transition-colors disabled:opacity-60"
+            onClick={() => setSaveOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={saveOpen}
+            title={t('quickSave.title')}
+            disabled={saveBusy !== null}
+          >
+            <span aria-hidden>💾</span>
+            <span className="hidden md:inline">
+              {saveBusy
+                ? settings.lang === 'fa'
+                  ? 'در حال ذخیره…'
+                  : 'Saving…'
+                : t('quickSave.button')}
+            </span>
+          </button>
+          {saveOpen && (
+            <div
+              role="menu"
+              className={`absolute top-full mt-2 z-[60] w-[248px] rounded-xl border border-line bg-surface p-1.5 shadow-float ${
+                settings.lang === 'fa' ? 'start-0' : 'end-0'
+              }`}
+            >
+              <button
+                role="menuitem"
+                type="button"
+                className="w-full flex items-start gap-2.5 rounded-lg px-2.5 py-2 text-start hover:bg-surface-2 transition-colors disabled:opacity-60"
+                disabled={saveBusy !== null}
+                onClick={() => void quickLocalSave()}
+              >
+                <span aria-hidden className="text-[15px] leading-none mt-0.5">📁</span>
+                <span className="min-w-0">
+                  <span className="block text-[12.5px] font-semibold">{t('quickSave.local')}</span>
+                  <span className="block text-[11px] text-faint leading-relaxed">{t('quickSave.localHint')}</span>
+                </span>
+              </button>
+              <button
+                role="menuitem"
+                type="button"
+                className="w-full flex items-start gap-2.5 rounded-lg px-2.5 py-2 text-start hover:bg-surface-2 transition-colors disabled:opacity-60"
+                disabled={saveBusy !== null}
+                onClick={() => void quickCloudSave()}
+              >
+                <span aria-hidden className="text-[15px] leading-none mt-0.5">☁</span>
+                <span className="min-w-0">
+                  <span className="block text-[12.5px] font-semibold">{t('quickSave.cloud')}</span>
+                  <span className="block text-[11px] text-faint leading-relaxed">
+                    {loggedIn ? t('quickSave.cloudHint') : t('quickSave.loginHint')}
+                  </span>
+                </span>
+              </button>
+            </div>
+          )}
+          {saveNote && (
+            <div
+              className={`absolute top-full mt-2 z-[61] w-[248px] rounded-lg border border-line bg-surface px-2.5 py-2 text-[11.5px] shadow-float ${
+                settings.lang === 'fa' ? 'start-0' : 'end-0'
+              } ${saveNote.kind === 'ok' ? 'text-success' : 'text-danger'}`}
+            >
+              {saveNote.text}
+            </div>
+          )}
+        </div>
         <button
           className="hidden sm:flex items-center gap-1.5 bg-surface border border-line rounded-lg px-3 py-1.5 text-[13px] text-faint hover:border-faint transition-colors"
           onClick={() => window.dispatchEvent(new CustomEvent('sazora:search'))}

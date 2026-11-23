@@ -19,6 +19,7 @@ import {
 } from '../lib/jalali'
 import { faDigits, groupDigits, downloadJSON, hours as fmtHours } from '../lib/format'
 import { compressImage } from '../lib/photos'
+import { requireLogin } from '../lib/auth'
 import { Chip, EmptyState, Field, TextInput, NumberInput, ExportMenu } from '../ui/components'
 import { DatePicker } from '../ui/datepicker'
 import { CategoryPicker } from '../ui/categoryPicker'
@@ -125,20 +126,23 @@ async function downloadCsv(filename: string, headers: string[], rows: (string | 
 
 /** دکمه خروجی CSV کل نیروها (بالای صفحه) */
 function WorkersCsvButton() {
-  const workers = useLiveQuery(() => db.workers.toArray(), [], [] as Worker[])
-  const attendances = useLiveQuery(() => db.attendances.toArray(), [], [] as Attendance[])
-  const payments = useLiveQuery(() => db.payments.toArray(), [], [] as Payment[])
-
   async function exportAll() {
+    if (!requireLogin()) return
+    // فقط هنگام خروجی خوانده می‌شود تا با لیست بزرگ حضور/پرداخت، صفحه سنگین نشود
+    const [workers, attendances, payments] = await Promise.all([
+      db.workers.toArray(),
+      db.attendances.toArray(),
+      db.payments.toArray(),
+    ])
     const headers = ['نام', 'شغل', 'تلفن', 'دستمزد روزانه', 'تعداد روز کارکرد (کل)', 'جمع ساعت', 'جمع مزد', 'جمع دریافتی', 'مانده']
-    const rows = [...(workers ?? [])]
+    const rows = [...workers]
       .sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
       .map((w) => {
-        const atts = (attendances ?? []).filter((a) => a.workerId === w.id)
+        const atts = attendances.filter((a) => a.workerId === w.id)
         const totalHours = atts.reduce((s, a) => s + a.hours, 0)
         const daysWorked = atts.length
         const earned = Math.round((totalHours / 8) * w.dailyWage)
-        const paid = (payments ?? []).filter((p) => p.workerId === w.id).reduce((s, p) => s + p.amount, 0)
+        const paid = payments.filter((p) => p.workerId === w.id).reduce((s, p) => s + p.amount, 0)
         const balance = earned - paid
         return [w.name, w.role, w.phone ?? '', w.dailyWage, daysWorked, totalHours, earned, paid, balance] as (string | number)[]
       })
@@ -262,6 +266,7 @@ function DailyView() {
   }
 
   async function exportDaily() {
+    if (!requireLogin()) return
     const headers = ['نام', 'ساعت', 'مزد آن روز', 'پروژه']
     const rows = selectedAttendance.map((a) => {
       const w = workers.find((x) => x.id === a.workerId)
@@ -1621,6 +1626,7 @@ function WorkerExportBox({
 
   async function doExport() {
     if (!worker) return
+    if (!requireLogin()) return
     const stamp = todayJalali()
     const base = `worker-${worker.name.replace(/\s+/g, '_')}-${stamp}`
     if (format === 'json') {

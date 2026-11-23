@@ -430,8 +430,13 @@ export interface AutoBackup {
   id?: number
   /** زمان ساخت (timestamp) */
   at: number
-  /** محتوای کامل JSON خروجی */
-  json: string
+  /** محتوای کامل JSON خروجی — فقط در نسخه‌های قدیمی */
+  json?: string
+  /** محتوای فشرده‌شده (gzip) — فرمت جدید برای صرفه‌جویی در فضا و رم */
+  blob?: Blob
+  format?: 'gzip-json'
+  /** حجم فایل فشرده به بایت */
+  bytes?: number
 }
 
 /** پایگاه داده محلی (IndexedDB) */
@@ -607,37 +612,68 @@ export async function wipeAll() {
   }
 }
 
+/** فرصت دادن به رابط کاربری بین جدول‌ها — بکاپ سنگین نباید اپ را فریز کند */
+const yieldToUI = () =>
+  new Promise<void>((resolve) => {
+    const sched = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler
+    if (sched?.yield) {
+      sched.yield().then(() => resolve(), () => resolve())
+      return
+    }
+    setTimeout(resolve, 0)
+  })
+
+/** خواندن یک جدول به‌صورت تکه‌تکه (هر ۲۰۰۰ ردیف) تا رشتهٔ اصلی طولانی بلاک نشود */
+async function readTableChunked<T extends { id?: number }>(table: Table<T, number>): Promise<T[]> {
+  const CHUNK = 2000
+  const out: T[] = []
+  let lastId: number | null = null
+  for (;;) {
+    const page: T[] =
+      lastId == null
+        ? await table.limit(CHUNK).toArray()
+        : await table.where(':id').above(lastId).limit(CHUNK).toArray()
+    out.push(...page)
+    if (page.length < CHUNK) break
+    const last: T | undefined = page[page.length - 1]
+    if (typeof last?.id !== 'number') break
+    lastId = last.id
+    await yieldToUI()
+  }
+  await yieldToUI()
+  return out
+}
+
 /** خروجی کامل داده‌ها برای بکاپ JSON */
 export async function exportAll() {
-  const [spaces, projects, tasks, workers, attendances, payments, financeEntries, stages, projectPhotos, dayLogs, rateItems, measurements, transactions, assets, prices, goals, goalItems, habits, habitLogs, workoutDays, bodyMetrics, progressPhotos, workoutPlans, books, bookSessions] = await Promise.all([
-    db.spaces.toArray(),
-    db.projects.toArray(),
-    db.tasks.toArray(),
-    db.workers.toArray(),
-    db.attendances.toArray(),
-    db.payments.toArray(),
-    db.financeEntries.toArray(),
-    db.stages.toArray(),
-    db.projectPhotos.toArray(),
-    db.dayLogs.toArray(),
-    db.rateItems.toArray(),
-    db.measurements.toArray(),
-    db.transactions.toArray(),
-    db.assets.toArray(),
-    db.prices.toArray(),
-    db.goals.toArray(),
-    db.goalItems.toArray(),
-    db.habits.toArray(),
-    db.habitLogs.toArray(),
-    db.workoutDays.toArray(),
-    db.bodyMetrics.toArray(),
-    db.progressPhotos.toArray(),
-    db.workoutPlans.toArray(),
-    db.books.toArray(),
-    db.bookSessions.toArray(),
-  ])
+  const spaces = await readTableChunked(db.spaces as unknown as Table<{ id?: number }, number>)
+  const projects = await readTableChunked(db.projects as unknown as Table<{ id?: number }, number>)
+  const tasks = await readTableChunked(db.tasks as unknown as Table<{ id?: number }, number>)
+  const workers = await readTableChunked(db.workers as unknown as Table<{ id?: number }, number>)
+  const attendances = await readTableChunked(db.attendances as unknown as Table<{ id?: number }, number>)
+  const payments = await readTableChunked(db.payments as unknown as Table<{ id?: number }, number>)
+  const financeEntries = await readTableChunked(db.financeEntries as unknown as Table<{ id?: number }, number>)
+  const stages = await readTableChunked(db.stages as unknown as Table<{ id?: number }, number>)
+  const projectPhotos = await readTableChunked(db.projectPhotos as unknown as Table<{ id?: number }, number>)
+  const dayLogs = await readTableChunked(db.dayLogs as unknown as Table<{ id?: number }, number>)
+  const rateItems = await readTableChunked(db.rateItems as unknown as Table<{ id?: number }, number>)
+  const measurements = await readTableChunked(db.measurements as unknown as Table<{ id?: number }, number>)
+  const transactions = await readTableChunked(db.transactions as unknown as Table<{ id?: number }, number>)
+  const assets = await readTableChunked(db.assets as unknown as Table<{ id?: number }, number>)
+  const prices = await db.prices.toArray()
+  await yieldToUI()
+  const goals = await readTableChunked(db.goals as unknown as Table<{ id?: number }, number>)
+  const goalItems = await readTableChunked(db.goalItems as unknown as Table<{ id?: number }, number>)
+  const habits = await readTableChunked(db.habits as unknown as Table<{ id?: number }, number>)
+  const habitLogs = await readTableChunked(db.habitLogs as unknown as Table<{ id?: number }, number>)
+  const workoutDays = await readTableChunked(db.workoutDays as unknown as Table<{ id?: number }, number>)
+  const bodyMetrics = await readTableChunked(db.bodyMetrics as unknown as Table<{ id?: number }, number>)
+  const progressPhotos = await readTableChunked(db.progressPhotos as unknown as Table<{ id?: number }, number>)
+  const workoutPlans = await readTableChunked(db.workoutPlans as unknown as Table<{ id?: number }, number>)
+  const books = await readTableChunked(db.books as unknown as Table<{ id?: number }, number>)
+  const bookSessions = await readTableChunked(db.bookSessions as unknown as Table<{ id?: number }, number>)
   // فایل و جلد کتاب‌ها (Blob/dataURL) در بکاپ JSON نمی‌آیند تا فایل سبک بماند
-  const booksSafe = books.map(({ fileBlob: _b, cover: _c, ...rest }) => rest)
+  const booksSafe = (books as Array<Record<string, unknown>>).map(({ fileBlob: _b, cover: _c, ...rest }) => rest)
   return {
     app: 'sazora',
     version: 14,
