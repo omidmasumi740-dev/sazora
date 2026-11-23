@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
+import { applyBackupProfile, readBackupProfile } from '../lib/profile'
 
 /* ============================================================
    مدل‌های داده — اپ «بُنا»
@@ -305,6 +306,15 @@ export interface Transaction {
   createdAt: number
 }
 
+/** سقف بودجهٔ ماهانه هر دسته — دائمی است و هر ماه تکرار می‌شود تا تغییرش دهیم */
+export interface Budget {
+  /** نام دسته هزینه (کلید اصلی) */
+  category: string
+  /** سقف ماهانه (تومان) */
+  amount: number
+  updatedAt: number
+}
+
 /** دارایی سرمایه‌گذاری — طلا، دلار، سهام… */
 export interface Asset {
   id?: number
@@ -454,6 +464,7 @@ export class BanaDB extends Dexie {
   rateItems!: EntityTable<RateItem, 'id'>
   measurements!: EntityTable<Measurement, 'id'>
   transactions!: EntityTable<Transaction, 'id'>
+  budgets!: EntityTable<Budget, 'category'>
   assets!: EntityTable<Asset, 'id'>
   prices!: EntityTable<PriceCache, 'id'>
   goals!: EntityTable<Goal, 'id'>
@@ -535,6 +546,33 @@ export class BanaDB extends Dexie {
     this.version(15).stores({
       autoBackups: '++id, at',
     })
+    this.version(16)
+      .stores({
+        budgets: 'category',
+      })
+      .upgrade(async (tx) => {
+        // انتقال بودجه‌های قدیمی از localStorage به دیتابیس (تا در بکاپ و سینک بیایند)
+        let raw: string | null = null
+        try {
+          raw = localStorage.getItem('sazora-budgets')
+        } catch {
+          /* ignore */
+        }
+        if (!raw) return
+        try {
+          const parsed = JSON.parse(raw) as Record<string, unknown>
+          const rows: Budget[] = []
+          for (const [k, v] of Object.entries(parsed)) {
+            const n = Number(v)
+            if (k && Number.isFinite(n) && n > 0) {
+              rows.push({ category: k, amount: Math.round(n), updatedAt: Date.now() })
+            }
+          }
+          if (rows.length) await tx.table('budgets').bulkAdd(rows)
+        } catch {
+          /* ignore */
+        }
+      })
   }
 }
 
@@ -558,6 +596,7 @@ export async function wipeAll() {
       db.rateItems,
       db.measurements,
       db.transactions,
+      db.budgets,
       db.assets,
       db.prices,
       db.goals,
@@ -587,6 +626,7 @@ export async function wipeAll() {
         db.rateItems.clear(),
         db.measurements.clear(),
         db.transactions.clear(),
+        db.budgets.clear(),
         db.assets.clear(),
         db.prices.clear(),
         db.goals.clear(),
@@ -659,6 +699,7 @@ export async function exportAll() {
   const rateItems = await readTableChunked(db.rateItems as unknown as Table<{ id?: number }, number>)
   const measurements = await readTableChunked(db.measurements as unknown as Table<{ id?: number }, number>)
   const transactions = await readTableChunked(db.transactions as unknown as Table<{ id?: number }, number>)
+  const budgets = await db.budgets.toArray()
   const assets = await readTableChunked(db.assets as unknown as Table<{ id?: number }, number>)
   const prices = await db.prices.toArray()
   await yieldToUI()
@@ -678,7 +719,8 @@ export async function exportAll() {
     app: 'sazora',
     version: 14,
     exportedAt: new Date().toISOString(),
-    data: { spaces, projects, tasks, workers, attendances, payments, financeEntries, stages, projectPhotos, dayLogs, rateItems, measurements, transactions, assets, prices, goals, goalItems, habits, habitLogs, workoutDays, bodyMetrics, progressPhotos, workoutPlans, books: booksSafe, bookSessions },
+    profile: readBackupProfile(),
+    data: { spaces, projects, tasks, workers, attendances, payments, financeEntries, stages, projectPhotos, dayLogs, rateItems, measurements, transactions, budgets, assets, prices, goals, goalItems, habits, habitLogs, workoutDays, bodyMetrics, progressPhotos, workoutPlans, books: booksSafe, bookSessions },
   }
 }
 
@@ -726,6 +768,7 @@ const ALL_TABLES = [
   db.rateItems,
   db.measurements,
   db.transactions,
+  db.budgets,
   db.assets,
   db.prices,
   db.goals,
@@ -763,7 +806,7 @@ async function mergeTable(
 
 /** ادغام بکاپ با داده‌های فعلی — بدون پاک‌کردن چیزی */
 export async function mergeAll(payload: unknown): Promise<MergeStats> {
-  const p = payload as { app?: string; data?: Record<string, unknown[]> }
+  const p = payload as { app?: string; data?: Record<string, unknown[]>; profile?: unknown }
   if (!p || p.app !== 'sazora' || !p.data) throw new Error('invalid-backup')
   const d = p.data
   const stats: MergeStats = { added: 0, updated: 0, tables: {} }
@@ -782,6 +825,7 @@ export async function mergeAll(payload: unknown): Promise<MergeStats> {
     ['rateItems', db.rateItems as unknown as Table<IdRow, number>, d.rateItems],
     ['measurements', db.measurements as unknown as Table<IdRow, number>, d.measurements],
     ['transactions', db.transactions as unknown as Table<IdRow, number>, d.transactions],
+    ['budgets', db.budgets as unknown as Table<IdRow, number>, d.budgets],
     ['assets', db.assets as unknown as Table<IdRow, number>, d.assets],
     ['prices', db.prices as unknown as Table<IdRow, number>, d.prices],
     ['goals', db.goals as unknown as Table<IdRow, number>, d.goals],
@@ -804,12 +848,13 @@ export async function mergeAll(payload: unknown): Promise<MergeStats> {
       stats.updated += r.updated
     }
   })
+  applyBackupProfile(p.profile)
   return stats
 }
 
 /** جایگزینی کامل — پاک‌سازی و نوشتن بکاپ (رفتار قدیمی) */
 export async function replaceAll(payload: unknown) {
-  const p = payload as { app?: string; data?: Record<string, unknown[]> }
+  const p = payload as { app?: string; data?: Record<string, unknown[]>; profile?: unknown }
   if (!p || p.app !== 'sazora' || !p.data) throw new Error('invalid-backup')
   const data = p.data
   await db.transaction(
@@ -828,6 +873,7 @@ export async function replaceAll(payload: unknown) {
       db.rateItems,
       db.measurements,
       db.transactions,
+      db.budgets,
       db.assets,
       db.prices,
       db.goals,
@@ -857,6 +903,7 @@ export async function replaceAll(payload: unknown) {
         db.rateItems.clear(),
         db.measurements.clear(),
         db.transactions.clear(),
+        db.budgets.clear(),
         db.assets.clear(),
         db.prices.clear(),
         db.goals.clear(),
@@ -889,6 +936,7 @@ export async function replaceAll(payload: unknown) {
         await db.measurements.bulkAdd(data.measurements as Measurement[])
       if (data.transactions?.length)
         await db.transactions.bulkAdd(data.transactions as Transaction[])
+      if (data.budgets?.length) await db.budgets.bulkAdd(data.budgets as Budget[])
       if (data.assets?.length) await db.assets.bulkAdd(data.assets as Asset[])
       if (data.prices?.length) await db.prices.bulkAdd(data.prices as PriceCache[])
       if (data.goals?.length) await db.goals.bulkAdd(data.goals as Goal[])
@@ -903,4 +951,5 @@ export async function replaceAll(payload: unknown) {
       if (data.bookSessions?.length) await db.bookSessions.bulkAdd(data.bookSessions as BookSession[])
     },
   )
+  applyBackupProfile(p.profile)
 }

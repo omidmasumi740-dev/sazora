@@ -160,7 +160,7 @@
         responseLabel: 'زمان پاسخ',
         responseBody: 'معمولاً تا ۲ روز کاری.',
         issuesLabel: 'برای گزارش خطا',
-        issuesBody: 'نسخهٔ برنامه (مثلاً ۱٫۹٫۲۲)، نسخهٔ ویندوز و توضیح کوتاه مشکل را بنویسید. اگر ممکن است، تصویر صفحه را هم بفرستید.',
+        issuesBody: 'نسخهٔ برنامه (مثلاً ۱٫۹٫۲۳)، نسخهٔ ویندوز و توضیح کوتاه مشکل را بنویسید. اگر ممکن است، تصویر صفحه را هم بفرستید.',
         deleteLabel: 'حذف حساب',
         deleteBody: 'از همان ایمیل حساب پیام بدهید تا پشتیبان‌های ابری هم پاک شوند.',
         home: 'بازگشت به صفحهٔ اصلی'
@@ -174,7 +174,7 @@
         responseLabel: 'Response time',
         responseBody: 'Usually within 2 business days.',
         issuesLabel: 'Reporting a bug',
-        issuesBody: 'Include the app version (for example 1.9.22), your Windows version and a short description of the problem. If you can, attach a screenshot.',
+        issuesBody: 'Include the app version (for example 1.9.23), your Windows version and a short description of the problem. If you can, attach a screenshot.',
         deleteLabel: 'Account deletion',
         deleteBody: 'Write from the account’s email so cloud backups can be removed too.',
         home: 'Back to home'
@@ -237,7 +237,7 @@
       });
     }
 
-    var version = CFG.VERSION || '1.9.22';
+    var version = CFG.VERSION || '1.9.23';
     var dl = CFG.DOWNLOAD_URL || repoBase + version + '/SAZORA_' + version + '_Setup.exe';
     document.querySelectorAll('[data-download="sazora"]').forEach(function (el) {
       el.setAttribute('href', dl);

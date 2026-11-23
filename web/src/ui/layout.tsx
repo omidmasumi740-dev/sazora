@@ -8,7 +8,8 @@ import { hasDesktopBridge, saveFileToFolder } from '../lib/updater'
 import { CloudError, cloudBackup } from '../lib/cloudBackup'
 import { Kbd } from './components'
 import { useSettings } from '../store/settings'
-import { PROFILE_EVENT, getProfilePhoto, markFileBackup } from '../pages/Settings'
+import { markFileBackup } from '../pages/Settings'
+import { PROFILE_EVENT, getProfilePhoto } from '../lib/profile'
 import { openAuth, useAuth } from '../lib/auth'
 
 /* ---------- آیکون‌ها ---------- */
@@ -148,7 +149,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           )}
         </div>
         <span className="ms-auto text-[10px] text-faint bg-surface-2 border border-line rounded px-1.5">
-          v1.9.22
+          v1.9.23
         </span>
       </div>
 
@@ -251,7 +252,7 @@ export function Topbar({ title, onOpenMenu }: { title: string; onOpenMenu?: () =
   const { user, loggedIn } = useAuth()
   const [photo, setPhoto] = useState<string | null>(() => getProfilePhoto())
   const [saveOpen, setSaveOpen] = useState(false)
-  const [saveBusy, setSaveBusy] = useState<'local' | 'cloud' | null>(null)
+  const [saveBusy, setSaveBusy] = useState<'local' | 'cloud' | 'pull' | null>(null)
   const [saveNote, setSaveNote] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const saveRef = useRef<HTMLDivElement>(null)
 
@@ -336,6 +337,40 @@ export function Topbar({ title, onOpenMenu }: { title: string; onOpenMenu?: () =
     }
   }
 
+  async function quickPull() {
+    if (saveBusy) return
+    if (!loggedIn) {
+      openAuth('login')
+      return
+    }
+    if (!window.confirm(t('quickSave.pullConfirm'))) return
+    setSaveBusy('pull')
+    setSaveNote(null)
+    try {
+      await cloudBackup.pull_latest()
+      setSaveNote({ kind: 'ok', text: t('quickSave.pullDone') })
+      setTimeout(() => window.location.reload(), 900)
+    } catch (err) {
+      const code = err instanceof CloudError ? err.code : 'unknown'
+      if (code === 'login_required' || code === 'session_expired') {
+        openAuth('login')
+        setSaveNote({ kind: 'err', text: t('auth.err_session_expired') })
+      } else if (code === 'need_passphrase' || code === 'wrong_passphrase') {
+        setSaveNote({ kind: 'err', text: t('quickSave.pullNeedKey') })
+      } else if (code === 'no_backup') {
+        setSaveNote({ kind: 'err', text: t('quickSave.pullNoBackup') })
+      } else if (code === 'offline') {
+        setSaveNote({ kind: 'err', text: t('auth.err_offline') })
+      } else if (code === 'timeout') {
+        setSaveNote({ kind: 'err', text: t('auth.err_timeout') })
+      } else {
+        setSaveNote({ kind: 'err', text: t('auth.err_unknown') })
+      }
+    } finally {
+      setSaveBusy(null)
+    }
+  }
+
   useEffect(() => {
     const refresh = () => setPhoto(getProfilePhoto())
     window.addEventListener(PROFILE_EVENT, refresh)
@@ -377,6 +412,17 @@ export function Topbar({ title, onOpenMenu }: { title: string; onOpenMenu?: () =
           <span className="text-[13px]">☁</span>
           <span className="truncate" dir="ltr">
             {user?.email ?? t('auth.login')}
+          </span>
+        </button>
+        <button
+          className="flex items-center gap-1.5 bg-surface border border-line rounded-lg px-3 py-1.5 text-[12.5px] text-muted hover:border-faint transition-colors disabled:opacity-60"
+          onClick={() => void quickPull()}
+          title={t('quickSave.refreshTitle')}
+          disabled={saveBusy !== null}
+        >
+          <span aria-hidden className={saveBusy === 'pull' ? 'inline-block animate-spin' : ''}>🔄</span>
+          <span className="hidden md:inline">
+            {saveBusy === 'pull' ? t('quickSave.pulling') : t('quickSave.refresh')}
           </span>
         </button>
         <div ref={saveRef} className="relative hidden sm:block">

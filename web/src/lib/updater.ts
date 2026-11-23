@@ -38,7 +38,7 @@ export function onDesktopMessage(cb: (data: Record<string, unknown>) => void): (
   return () => h.removeEventListener('message', handler)
 }
 
-export const APP_VERSION = '1.9.22'
+export const APP_VERSION = '1.9.23'
 export const GITHUB_REPO = 'omidmasumi740-dev/sazora'
 
 export interface UpdateInfo {

@@ -5,6 +5,8 @@ import { openAuth, useAuth } from '../lib/auth'
 import {
   CloudError,
   cloudBackup,
+  exportRecoveryCode,
+  importRecoveryCode,
   lastCloudBackupAt,
   type CloudBackupItem,
 } from '../lib/cloudBackup'
@@ -50,6 +52,9 @@ export function CloudBackupPanel({ embedded = false }: { embedded?: boolean }) {
   const [legacyPass, setLegacyPass] = useState('')
   const [legacyError, setLegacyError] = useState<string | null>(null)
   const [legacyBusy, setLegacyBusy] = useState(false)
+  const [recovery, setRecovery] = useState<string | null>(null)
+  const [recoveryInput, setRecoveryInput] = useState('')
+  const [recoveryBusy, setRecoveryBusy] = useState(false)
 
   useEffect(() => {
     if (!note) return
@@ -94,6 +99,8 @@ export function CloudBackupPanel({ embedded = false }: { embedded?: boolean }) {
       restore_failed: t('cloud.err_restore'),
       wrong_passphrase: t('cloud.encWrong'),
       need_passphrase: t('cloud.encNeed'),
+      no_backup: t('quickSave.pullNoBackup'),
+      bad_key: t('cloud.recoveryBad'),
     }
     setNote({ kind: 'err', text: map[code] ?? t('auth.err_unknown') })
   }
@@ -163,6 +170,42 @@ export function CloudBackupPanel({ embedded = false }: { embedded?: boolean }) {
       await doRestore(target, legacyPass)
     } finally {
       setLegacyBusy(false)
+    }
+  }
+
+  async function toggleRecovery() {
+    if (recovery) {
+      setRecovery(null)
+      return
+    }
+    try {
+      setRecovery(await exportRecoveryCode())
+    } catch (err) {
+      handleError(err)
+    }
+  }
+
+  async function copyRecovery() {
+    if (!recovery) return
+    try {
+      await navigator.clipboard.writeText(recovery)
+      setNote({ kind: 'ok', text: t('cloud.recoveryCopied') })
+    } catch {
+      /* انتخاب دستی کافی است */
+    }
+  }
+
+  async function saveRecovery() {
+    if (recoveryBusy || !recoveryInput.trim()) return
+    setRecoveryBusy(true)
+    try {
+      await importRecoveryCode(recoveryInput)
+      setRecoveryInput('')
+      setNote({ kind: 'ok', text: t('cloud.recoverySaved') })
+    } catch (err) {
+      handleError(err)
+    } finally {
+      setRecoveryBusy(false)
     }
   }
 
@@ -247,6 +290,43 @@ export function CloudBackupPanel({ embedded = false }: { embedded?: boolean }) {
         <div className="text-[11px] text-faint mt-1 leading-relaxed">{t('cloud.autoEncBody')}</div>
         <div className="text-[11px] text-faint mt-1 leading-relaxed">{t('cloud.keepNote')}</div>
         <div className="text-[11px] text-faint mt-1 leading-relaxed">{t('cloud.limitNote')}</div>
+
+        <div className="mt-3 rounded-lg border border-line bg-surface-2 p-2.5">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="text-[12px] font-semibold">🔑 {t('cloud.recoveryTitle')}</div>
+            <button className="btn btn-ghost !py-0.5 !px-2 text-[11.5px]" onClick={() => void toggleRecovery()}>
+              {recovery ? t('cloud.recoveryHide') : t('cloud.recoveryShow')}
+            </button>
+          </div>
+          {recovery && (
+            <>
+              <div className="text-[11px] text-faint mt-1 leading-relaxed">{t('cloud.recoveryShowHint')}</div>
+              <div className="flex gap-2 mt-2">
+                <TextInput dir="ltr" readOnly value={recovery} onFocus={(e) => e.currentTarget.select()} className="flex-1" />
+                <button className="btn !py-1 !px-2.5 text-[11.5px]" onClick={() => void copyRecovery()}>
+                  {t('cloud.recoveryCopy')}
+                </button>
+              </div>
+              <div className="text-[11px] text-faint mt-3 leading-relaxed">{t('cloud.recoveryImportHint')}</div>
+              <div className="flex gap-2 mt-1.5">
+                <TextInput
+                  dir="ltr"
+                  value={recoveryInput}
+                  onChange={(e) => setRecoveryInput(e.target.value)}
+                  placeholder="SZR-KEY1.…"
+                  className="flex-1"
+                />
+                <button
+                  className="btn !py-1 !px-2.5 text-[11.5px]"
+                  disabled={recoveryBusy || !recoveryInput.trim()}
+                  onClick={() => void saveRecovery()}
+                >
+                  {t('cloud.recoveryApply')}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
         {note && (
           <div

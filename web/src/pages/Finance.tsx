@@ -34,34 +34,62 @@ interface TxCats {
   expense: string[]
 }
 
-function loadBudgets(): Record<string, number> {
-  try {
-    const raw = localStorage.getItem('sazora-budgets')
-    if (raw) {
-      const p = JSON.parse(raw) as Record<string, unknown>
-      const out: Record<string, number> = {}
-      for (const [k, v] of Object.entries(p)) {
-        const n = Number(v)
-        if (k && Number.isFinite(n) && n > 0) out[k] = Math.round(n)
-      }
-      return out
-    }
-  } catch {
-    /* ignore */
-  }
-  return {}
-}
-
+/** بودجه‌ها در دیتابیس ذخیره می‌شوند: دائمی‌اند، هر ماه تکرار می‌شوند و با بکاپ/سینک جابه‌جا می‌شوند */
 function useBudgets() {
-  const [budgets, setBudgets] = useState<Record<string, number>>(loadBudgets)
+  const [budgets, setBudgets] = useState<Record<string, number>>({})
+
   useEffect(() => {
-    try {
-      localStorage.setItem('sazora-budgets', JSON.stringify(budgets))
-    } catch {
-      /* ignore */
+    let alive = true
+    void (async () => {
+      let map: Record<string, number> = {}
+      try {
+        const rows = await db.budgets.toArray()
+        for (const r of rows) if (r.category && r.amount > 0) map[r.category] = r.amount
+      } catch {
+        /* ignore */
+      }
+      if (Object.keys(map).length === 0) {
+        // انتقال یک‌بارهٔ بودجه‌های قدیمی localStorage در صورت خالی بودن دیتابیس
+        try {
+          const raw = localStorage.getItem('sazora-budgets')
+          if (raw) {
+            const p = JSON.parse(raw) as Record<string, unknown>
+            const rows: Array<{ category: string; amount: number; updatedAt: number }> = []
+            for (const [k, v] of Object.entries(p)) {
+              const n = Number(v)
+              if (k && Number.isFinite(n) && n > 0) rows.push({ category: k, amount: Math.round(n), updatedAt: Date.now() })
+            }
+            if (rows.length) {
+              await db.budgets.bulkPut(rows)
+              map = Object.fromEntries(rows.map((r) => [r.category, r.amount]))
+            }
+          }
+          localStorage.removeItem('sazora-budgets')
+        } catch {
+          /* ignore */
+        }
+      }
+      if (alive) setBudgets(map)
+    })()
+    return () => {
+      alive = false
     }
-  }, [budgets])
+  }, [])
+
+  function persist(cat: string, amount: number) {
+    void (async () => {
+      try {
+        if (amount > 0) await db.budgets.put({ category: cat, amount: Math.round(amount), updatedAt: Date.now() })
+        else await db.budgets.delete(cat)
+      } catch {
+        /* ignore */
+      }
+    })()
+  }
+
   function setBudget(cat: string, amount: number) {
+    if (!cat) return
+    persist(cat, amount)
     setBudgets((prev) => {
       if (!amount || amount <= 0) {
         const next = { ...prev }
@@ -72,6 +100,7 @@ function useBudgets() {
     })
   }
   function removeBudget(cat: string) {
+    void db.budgets.delete(cat).catch(() => undefined)
     setBudgets((prev) => {
       const next = { ...prev }
       delete next[cat]
@@ -84,6 +113,15 @@ function useBudgets() {
     setBudgets((prev) => {
       if (!(oldName in prev)) return prev
       if (n in prev) return prev
+      const amount = prev[oldName]
+      void (async () => {
+        try {
+          await db.budgets.delete(oldName)
+          await db.budgets.put({ category: n, amount, updatedAt: Date.now() })
+        } catch {
+          /* ignore */
+        }
+      })()
       const next: Record<string, number> = {}
       for (const [k, v] of Object.entries(prev)) {
         next[k === oldName ? n : k] = v
@@ -378,7 +416,10 @@ function BudgetBox({
               <b className="text-[15px]">💰 بودجه‌بندی ماه</b>
               <button className="text-faint hover:text-[color:var(--b-red)] text-[15px]" onClick={() => setOpen(false)}>✕</button>
             </div>
-            <div className="text-[11.5px] text-faint mb-3">سقف ماهانه هر دسته هزینه را وارد کنید تا مصرف واقعی را ببینید.</div>
+            <div className="text-[11.5px] text-faint mb-3">
+              سقف ماهانه هر دسته هزینه را وارد کنید تا مصرف واقعی را ببینید. این سقف‌ها دائمی‌اند و هر ماه
+              خودکار تکرار می‌شوند؛ فقط وقتی لازم شد تغییرشان دهید.
+            </div>
             <form onSubmit={submitNew} className="flex flex-col sm:flex-row gap-2 mb-3">
               <div className="flex-1">
                 <TextInput value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="نام دسته جدید…" />
@@ -468,7 +509,7 @@ function BudgetBox({
 }
 
 /* ============================================================
-   آمار و نمودار هزینه‌ها — ۶ ماه اخیر + تفکیک سال و ماه جاری
+   آمار و نمودار هزینه‌ها — ۶ ماه اخیر + تفکیک سال و ریزمصرف هر ماه
    ============================================================ */
 function SpendingCharts() {
   const { t, i18n } = useTranslation()
@@ -482,9 +523,10 @@ function SpendingCharts() {
     to: string
   } | null>(null)
 
+  /** ۱۲ ماه اخیر — برای انتخاب ماه در ریزمصرف */
   const months = useMemo(() => {
     const arr: { start: string; end: string; label: string }[] = []
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 11; i >= 0; i--) {
       const ref = addMonths(today, -i)
       const s = startOfMonth(ref)
       const e = endOfMonth(ref)
@@ -493,12 +535,12 @@ function SpendingCharts() {
     }
     return arr
   }, [today])
+  /** نمودار میله‌ای فقط ۶ ماه آخر را نشان می‌دهد تا خوانا بماند */
+  const chartMonths = useMemo(() => months.slice(-6), [months])
 
   const year = today.slice(0, 4)
   const yStart = `${year}-01-01`
   const yEnd = `${year}-12-31`
-  const mStart = startOfMonth(today)
-  const mEnd = endOfMonth(today)
   const rangeFrom = months[0].start < yStart ? months[0].start : yStart
   const rangeTo = months[months.length - 1].end > yEnd ? months[months.length - 1].end : yEnd
 
@@ -511,7 +553,7 @@ function SpendingCharts() {
 
   const monthTotals = useMemo(
     () =>
-      months.map((m) => {
+      chartMonths.map((m) => {
         const inRange = (x: Transaction) => x.date >= m.start && x.date <= m.end
         const sumOf = (type: Transaction['type']) =>
           allTx.filter((x) => x.type === type && inRange(x)).reduce((s, x) => s + x.amount, 0)
@@ -522,7 +564,7 @@ function SpendingCharts() {
           invest: sumOf('invest'),
         }
       }),
-    [allTx, months],
+    [allTx, chartMonths],
   )
   const maxM = Math.max(
     1,
@@ -546,14 +588,17 @@ function SpendingCharts() {
   }, [allTx, yStart, yEnd])
   const yearTotal = yearRows.reduce((s, [, v]) => s + v, 0)
 
-  const curRows = useMemo(() => {
+  /** ماه انتخاب‌شده برای ریزمصرف — پیش‌فرض ماه جاری، قابل تغییر به ۱۱ ماه قبل */
+  const [selStart, setSelStart] = useState(() => startOfMonth(today))
+  const selMonth = months.find((m) => m.start === selStart) ?? months[months.length - 1]
+  const selRows = useMemo(() => {
     const m = new Map<string, number>()
     allTx
-      .filter((x) => isOut(x.type) && x.date >= mStart && x.date <= mEnd)
+      .filter((x) => isOut(x.type) && x.date >= selMonth.start && x.date <= selMonth.end)
       .forEach((x) => m.set(x.category, (m.get(x.category) ?? 0) + x.amount))
     return [...m.entries()].sort((a, b) => b[1] - a[1])
-  }, [allTx, mStart, mEnd])
-  const curTotal = curRows.reduce((s, [, v]) => s + v, 0)
+  }, [allTx, selMonth.start, selMonth.end])
+  const selTotal = selRows.reduce((s, [, v]) => s + v, 0)
 
   const renderRows = (rows: [string, number][], total: number, from: string, to: string) => {
     if (rows.length === 0) return <div className="text-[12px] text-faint">—</div>
@@ -635,11 +680,24 @@ function SpendingCharts() {
           {renderRows(yearRows, yearTotal, yStart, yEnd)}
         </div>
         <div>
-          <b className="text-[12.5px] block mb-2">
-            {t('finance.breakdownMonth')}{' '}
-            <span className="text-faint font-normal">· {t('common.total')} {groupDigits(curTotal)}</span>
-          </b>
-          {renderRows(curRows, curTotal, mStart, mEnd)}
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <b className="text-[12.5px]">ریزمصرف ماه</b>
+            <select
+              className="field !py-1 !text-[11.5px] !w-auto"
+              value={selMonth.start}
+              onChange={(e) => setSelStart(e.target.value)}
+            >
+              {months.map((m) => (
+                <option key={m.start} value={m.start}>
+                  {m.label} {faDigits(m.start.slice(0, 4))}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="text-[11px] text-faint mb-2">
+            جمع: <b className="tabular-nums" dir="ltr">{groupDigits(selTotal)}</b> — روی هر دسته بزنید تا هزینه‌های همان ماه را ببینید.
+          </div>
+          {renderRows(selRows, selTotal, selMonth.start, selMonth.end)}
         </div>
       </div>
 

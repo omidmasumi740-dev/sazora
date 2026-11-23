@@ -16,12 +16,19 @@ export class ApiError extends Error {
   }
 }
 
+export interface SupabaseUser {
+  id: string
+  email: string | null
+  /** user_metadata — مثل full_name برای نام نمایشی */
+  metadata?: Record<string, unknown>
+}
+
 export interface SupabaseSession {
   access_token: string
   refresh_token: string
   /** ثانیهٔ یونیکس */
   expires_at: number
-  user: { id: string; email: string | null }
+  user: SupabaseUser
 }
 
 export interface StorageObject {
@@ -36,7 +43,7 @@ interface RawSession {
   refresh_token?: string
   expires_at?: number
   expires_in?: number
-  user?: { id?: string; email?: string | null }
+  user?: { id?: string; email?: string | null; user_metadata?: Record<string, unknown> }
   error_description?: string
   msg?: string
   message?: string
@@ -51,7 +58,11 @@ function toSession(raw: RawSession): SupabaseSession | null {
     access_token: raw.access_token,
     refresh_token: raw.refresh_token,
     expires_at: expires,
-    user: { id: raw.user.id, email: raw.user.email ?? null },
+    user: {
+      id: raw.user.id,
+      email: raw.user.email ?? null,
+      metadata: raw.user.user_metadata && typeof raw.user.user_metadata === 'object' ? raw.user.user_metadata : {},
+    },
   }
 }
 
@@ -109,9 +120,15 @@ function netGuard(): void {
 }
 
 export const supabase = {
-  async signUp(email: string, password: string): Promise<{ session: SupabaseSession | null; needsConfirm: boolean }> {
+  async signUp(
+    email: string,
+    password: string,
+    data?: Record<string, unknown>,
+  ): Promise<{ session: SupabaseSession | null; needsConfirm: boolean }> {
     netGuard()
-    const res = await call('/auth/v1/signup', { body: { email, password } })
+    const body: Record<string, unknown> = { email, password }
+    if (data && Object.keys(data).length) body.data = data
+    const res = await call('/auth/v1/signup', { body })
     if (!res.ok) throw await parseError(res)
     const raw = (await res.json()) as RawSession
     const session = toSession(raw)
@@ -151,13 +168,31 @@ export const supabase = {
   },
 
   /** کاربر جاری از روی توکن (برای لینک تأیید ایمیل/بازیابی) */
-  async getUser(accessToken: string): Promise<{ id: string; email: string | null }> {
+  async getUser(accessToken: string): Promise<SupabaseUser> {
     netGuard()
     const res = await call('/auth/v1/user', { token: accessToken })
     if (!res.ok) throw await parseError(res)
-    const raw = (await res.json()) as { id?: string; email?: string | null }
+    const raw = (await res.json()) as { id?: string; email?: string | null; user_metadata?: Record<string, unknown> }
     if (!raw.id) throw new ApiError(401, 'unauthorized', 'unauthorized')
-    return { id: raw.id, email: raw.email ?? null }
+    return {
+      id: raw.id,
+      email: raw.email ?? null,
+      metadata: raw.user_metadata && typeof raw.user_metadata === 'object' ? raw.user_metadata : {},
+    }
+  },
+
+  /** به‌روزرسانی metadata کاربر — مثل full_name */
+  async updateProfile(accessToken: string, data: Record<string, unknown>): Promise<SupabaseUser> {
+    netGuard()
+    const res = await call('/auth/v1/user', { method: 'PUT', token: accessToken, body: { data } })
+    if (!res.ok) throw await parseError(res)
+    const raw = (await res.json()) as { id?: string; email?: string | null; user_metadata?: Record<string, unknown> }
+    if (!raw.id) throw new ApiError(401, 'unauthorized', 'unauthorized')
+    return {
+      id: raw.id,
+      email: raw.email ?? null,
+      metadata: raw.user_metadata && typeof raw.user_metadata === 'object' ? raw.user_metadata : {},
+    }
   },
 
   async updatePassword(accessToken: string, password: string): Promise<void> {

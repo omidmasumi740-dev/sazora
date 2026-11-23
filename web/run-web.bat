@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM  SAZORA Web App v1.9.22 - Launcher
+REM  SAZORA Web App v1.9.23 - Launcher
 REM  Builds (if needed) and serves at http://localhost:5180
 REM ============================================================
 chcp 65001 >nul
@@ -8,7 +8,7 @@ cd /d "%~dp0"
 
 echo.
 echo   ========================================
-echo   SAZORA Web App v1.9.22
+echo   SAZORA Web App v1.9.23
 echo   ========================================
 echo.
 

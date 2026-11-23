@@ -5,8 +5,9 @@
    - همهٔ خطاها به کد قابل‌ترجمه تبدیل می‌شوند (UI پیام دوستانه نشان می‌دهد)
    ============================================================ */
 import { useSyncExternalStore } from 'react'
-import { ApiError, supabase, type SupabaseSession } from './supabase'
+import { ApiError, supabase, type SupabaseSession, type SupabaseUser } from './supabase'
 import { deleteSecret, loadSecret, saveSecret } from './secureStore'
+import { useSettings } from '../store/settings'
 
 export type AuthErrorCode =
   | 'invalid_email'
@@ -35,6 +36,24 @@ export class AuthError extends Error {
 export interface AuthUser {
   id: string
   email: string | null
+  /** نام نمایشی از user_metadata (full_name) */
+  name: string
+}
+
+/** نام نمایشی از metadata حساب — full_name یا name */
+export function nameFromUser(user: SupabaseUser | null | undefined): string {
+  const meta = user?.metadata
+  if (!meta) return ''
+  const raw = meta.full_name ?? meta.name
+  return typeof raw === 'string' ? raw.trim() : ''
+}
+
+/** نام حساب را روی نام محلی اعمال می‌کند (مثلاً بعد از ورود روی دستگاه جدید) */
+export function applyRemoteName(user: SupabaseUser | null | undefined): void {
+  const name = nameFromUser(user)
+  if (!name) return
+  const current = useSettings.getState().userName.trim()
+  if (current !== name) useSettings.getState().setUserName(name)
 }
 
 const SECRET_KEY = 'supabase-session'
@@ -64,7 +83,9 @@ function emit() {
 
 function publish() {
   snapshot = {
-    user: session ? { id: session.user.id, email: session.user.email } : null,
+    user: session
+      ? { id: session.user.id, email: session.user.email, name: nameFromUser(session.user) }
+      : null,
     ready,
   }
   emit()
@@ -73,6 +94,7 @@ function publish() {
 function setSession(s: SupabaseSession | null) {
   session = s
   publish()
+  applyRemoteName(s?.user)
 }
 
 function mapError(err: unknown): AuthError {
@@ -131,6 +153,7 @@ export async function initAuth(): Promise<void> {
   } finally {
     ready = true
     publish()
+    applyRemoteName(session?.user)
   }
 }
 
@@ -146,6 +169,7 @@ export async function getAccessToken(): Promise<string> {
       session = await supabase.refresh(session.refresh_token)
       await persist(session)
       publish()
+      applyRemoteName(session.user)
     } catch (err) {
       session = null
       await persist(null)
@@ -156,12 +180,19 @@ export async function getAccessToken(): Promise<string> {
   return session.access_token
 }
 
-export async function signUp(email: string, password: string, confirm: string): Promise<'logged_in' | 'confirm_email'> {
+export async function signUp(
+  email: string,
+  password: string,
+  confirm: string,
+  fullName?: string,
+): Promise<'logged_in' | 'confirm_email'> {
   if (!validateEmail(email)) throw new AuthError('invalid_email')
   if (!validatePassword(password)) throw new AuthError('short_password')
   if (password !== confirm) throw new AuthError('password_mismatch')
+  const name = (fullName || '').trim()
   try {
-    const res = await supabase.signUp(email.trim(), password)
+    const res = await supabase.signUp(email.trim(), password, name ? { full_name: name } : undefined)
+    if (name) useSettings.getState().setUserName(name)
     if (res.session) {
       setSession(res.session)
       await persist(res.session)
@@ -171,6 +202,16 @@ export async function signUp(email: string, password: string, confirm: string): 
   } catch (err) {
     throw mapError(err)
   }
+}
+
+/** ذخیرهٔ نام نمایشی روی حساب — برای نمایش خودکار روی دستگاه‌های دیگر */
+export async function updateProfileName(fullName: string): Promise<void> {
+  if (!session) return
+  const token = await getAccessToken()
+  const user = await supabase.updateProfile(token, { full_name: fullName.trim() })
+  session = { ...session, user }
+  await persist(session)
+  publish()
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
@@ -286,7 +327,9 @@ export async function setNewPassword(password: string, confirm: string): Promise
 }
 
 export function getCurrentUser(): AuthUser | null {
-  return session ? { id: session.user.id, email: session.user.email } : null
+  return session
+    ? { id: session.user.id, email: session.user.email, name: nameFromUser(session.user) }
+    : null
 }
 
 export function isLoggedIn(): boolean {

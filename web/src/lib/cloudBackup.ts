@@ -28,6 +28,7 @@ import {
   randomB64,
 } from './crypto'
 import { deviceName, loadSecret, saveSecret } from './secureStore'
+import { applyBackupProfile } from './profile'
 import { ApiError, supabase, type StorageObject } from './supabase'
 import { APP_VERSION, hasDesktopBridge, saveFileToFolder } from './updater'
 
@@ -44,6 +45,8 @@ export type CloudErrorCode =
   | 'need_passphrase'
   | 'wrong_passphrase'
   | 'restore_failed'
+  | 'no_backup'
+  | 'bad_key'
   | 'unknown'
 
 export class CloudError extends Error {
@@ -99,6 +102,7 @@ const DATA_TABLES = [
   'rateItems',
   'measurements',
   'transactions',
+  'budgets',
   'assets',
   'prices',
   'goals',
@@ -205,9 +209,12 @@ export async function hasBackupKey(): Promise<boolean> {
 /* ---------------- جایگزینی کامل داده‌ها ---------------- */
 
 async function replaceAllData(data: Record<string, unknown[]>): Promise<void> {
+  // فقط جدول‌هایی که در فایل آمده‌اند جایگزین می‌شوند تا بکاپ ناقص (مثلاً نسخهٔ موبایل)
+  // دادهٔ بخش‌های دیگر روی همین دستگاه را پاک نکند. بکاپ کامل همهٔ جدول‌ها را دارد.
+  const present = DATA_TABLES.filter((name) => Array.isArray(data[name]))
   await db.transaction('rw', db.tables, async () => {
-    for (const name of DATA_TABLES) await table(name).clear()
-    for (const name of DATA_TABLES) {
+    for (const name of present) await table(name).clear()
+    for (const name of present) {
       const rows = data[name]
       if (Array.isArray(rows) && rows.length) await table(name).bulkAdd(rows)
     }
@@ -454,6 +461,7 @@ export class CloudBackupService {
     const safetyPath = await savePreRestore(JSON.stringify(before))
     try {
       await replaceAllData(payload.data)
+      applyBackupProfile((payload as { profile?: unknown }).profile)
     } catch {
       try {
         await replaceAllData(before.data as unknown as Record<string, unknown[]>)
@@ -465,9 +473,47 @@ export class CloudBackupService {
     notify()
     return { safetyPath }
   }
+
+  /** به‌روزرسانی داده از ابر: آخرین بکاپ حساب روی این دستگاه اعمال می‌شود */
+  async pull_latest(passphrase?: string): Promise<{ from: CloudBackupItem; safetyPath: string | null }> {
+    const list = await this.list_backups()
+    if (!list.length) throw new CloudError('no_backup')
+    const latest = list[0]
+    const res = await this.restore_backup(latest.path, passphrase)
+    return { from: latest, safetyPath: res.safetyPath }
+  }
 }
 
 export const cloudBackup = new CloudBackupService()
+
+/* ---------------- کد بازیابی برای همگام‌سازی چند دستگاه ---------------- */
+
+const RECOVERY_PREFIX = 'SZR-KEY1'
+
+/** کد بازیابی این حساب روی این دستگاه — برای وارد کردن در دستگاه دوم (ویندوز/موبایل) */
+export async function exportRecoveryCode(): Promise<string> {
+  const user = getCurrentUser()
+  if (!user) throw new CloudError('login_required')
+  const rec = await ensureKeyRecord(user.id)
+  return `${RECOVERY_PREFIX}.${rec.salt}.${rec.key}`
+}
+
+/** وارد کردن کد بازیابی در دستگاه جدید؛ از آن پس بکاپ‌های حساب قابل رمزگشایی است */
+export async function importRecoveryCode(code: string): Promise<void> {
+  const user = getCurrentUser()
+  if (!user) throw new CloudError('login_required')
+  const parts = code.trim().split('.')
+  if (parts.length !== 3 || parts[0] !== RECOVERY_PREFIX || !parts[1] || !parts[2]) {
+    throw new CloudError('bad_key')
+  }
+  try {
+    b64ToBytes(parts[1])
+    b64ToBytes(parts[2])
+  } catch {
+    throw new CloudError('bad_key')
+  }
+  await saveKeyRecord(user.id, { salt: parts[1], key: parts[2] })
+}
 
 let dailyRunning = false
 

@@ -18,6 +18,8 @@ export function AuthDialogs() {
   const { t } = useTranslation()
   const [mode, setMode] = useState<Mode | null>(null)
   const [gated, setGated] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -32,6 +34,8 @@ export function AuthDialogs() {
       setMode(detail.mode || 'login')
       setGated(Boolean(detail.gated))
       setNotice(detail.notice || null)
+      setFirstName('')
+      setLastName('')
       setEmail('')
       setPassword('')
       setConfirm('')
@@ -82,7 +86,12 @@ export function AuthDialogs() {
         await signIn(email, password)
         setMode(null)
       } else if (mode === 'signup') {
-        const res = await signUp(email, password, confirm)
+        if (!firstName.trim() || !lastName.trim()) {
+          setError(t('auth.err_name'))
+          setBusy(false)
+          return
+        }
+        const res = await signUp(email, password, confirm, `${firstName.trim()} ${lastName.trim()}`)
         if (res === 'confirm_email') {
           setInfo(t('auth.confirmEmail'))
           setMode('login')
@@ -155,6 +164,25 @@ export function AuthDialogs() {
         ) : (
           <>
             <form onSubmit={submit} className="flex flex-col gap-3">
+              {mode === 'signup' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label={t('auth.firstName')}>
+                    <TextInput
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      autoComplete="given-name"
+                      autoFocus
+                    />
+                  </Field>
+                  <Field label={t('auth.lastName')}>
+                    <TextInput
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      autoComplete="family-name"
+                    />
+                  </Field>
+                </div>
+              )}
               {mode !== 'new-password' && (
                 <Field label={t('auth.email')}>
                   <TextInput

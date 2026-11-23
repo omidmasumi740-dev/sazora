@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKe
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { openAuth, signOut, useAuth } from '../lib/auth'
+import { openAuth, signOut, updateProfileName, useAuth } from '../lib/auth'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useSettings, ACCENTS, type AccentId, type MenuKey } from '../store/settings'
 import { exportAll, importAll, wipeAll } from '../db/schema'
@@ -38,29 +38,7 @@ import { loadRateList, saveRateList, resetRateList, type RatePreset } from '../l
 import { UNITS } from '../lib/rates'
 import type { RateUnit } from '../db/schema'
 
-/* ============================================================
-   عکس پروفایل کاربر — localStorage کلید `sazora-profile-photo`
-   ============================================================ */
-export const PROFILE_PHOTO_KEY = 'sazora-profile-photo'
-export const PROFILE_EVENT = 'sazora:profile'
-
-export function getProfilePhoto(): string | null {
-  try {
-    return localStorage.getItem(PROFILE_PHOTO_KEY)
-  } catch {
-    return null
-  }
-}
-
-export function setProfilePhoto(dataUrl: string | null): void {
-  try {
-    if (dataUrl) localStorage.setItem(PROFILE_PHOTO_KEY, dataUrl)
-    else localStorage.removeItem(PROFILE_PHOTO_KEY)
-  } catch {
-    /* حافظه پر یا غیرفعال — نادیده بگیر */
-  }
-  window.dispatchEvent(new CustomEvent(PROFILE_EVENT))
-}
+import { getProfilePhoto, setProfilePhoto } from '../lib/profile'
 
 const MENU_KEYS: MenuKey[] = ['today', 'inbox', 'projects', 'workers', 'finance', 'goals', 'learn', 'club', 'board']
 
@@ -203,6 +181,18 @@ export default function SettingsPage() {
     window.addEventListener(AUTOSAVE_EVENT, refresh)
     return () => window.removeEventListener(AUTOSAVE_EVENT, refresh)
   }, [])
+
+  // نام نمایشی روی حساب ذخیره می‌شود تا بعد از ورود روی دستگاه دیگر هم بیاید
+  useEffect(() => {
+    if (!user) return
+    const name = s.userName.trim()
+    const id = setTimeout(() => {
+      void updateProfileName(name).catch(() => {
+        /* آفلاین یا خطای شبکه — ذخیرهٔ محلی معتبر است */
+      })
+    }, 1000)
+    return () => clearTimeout(id)
+  }, [s.userName, user])
 
   useEffect(() => {
     return onDesktopMessage((d) => {
@@ -550,7 +540,11 @@ export default function SettingsPage() {
               onChange={(e) => s.setUserName(e.target.value)}
               placeholder="مثلاً علی رضایی"
             />
-            <div className="text-[11px] text-faint mt-1">نام و عکس کنار هم زیر لوگوی برنامه نمایش داده می‌شوند.</div>
+            <div className="text-[11px] text-faint mt-1">
+              {loggedIn
+                ? 'نام شما در حساب ذخیره می‌شود و بعد از ورود روی دستگاه دیگر هم نمایش داده می‌شود.'
+                : 'نام و عکس کنار هم زیر لوگوی برنامه نمایش داده می‌شوند.'}
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className="btn" onClick={() => photoRef.current?.click()}>
